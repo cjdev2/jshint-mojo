@@ -57,16 +57,15 @@ public class Mojo extends AbstractMojo {
 	/*
 	 * TODO: 
 	 *   1) Add a way to skip (i.e. 'mvn install -Dlint.skip=true')
-	 *   2) Make it incremental: only files that have changed since the last run are re-checked
-	 *   3) Make it parallelizable: i.e. 'mvn install -Dlint.threads=4'
+	 *   2) Make it parallelizable: i.e. 'mvn install -Dlint.threads=4'
 	 */
 
-	public static class Record implements Serializable {
+	public static class Result implements Serializable {
 		final String path;
 		final Long lastModified;
 		final List<Error> errors;
 		
-		public Record(String path, Long lastModified, List<Error> errors) {
+		public Result(String path, Long lastModified, List<Error> errors) {
 			super();
 			this.path = path;
 			this.lastModified = lastModified;
@@ -80,13 +79,13 @@ public class Mojo extends AbstractMojo {
 		}
 		try {
 			
-			final File cachePath = new File(basedir, "target/lint.dat");
+			final File cachePath = new File(basedir, "target/lint.cache");
 			
-			final Map<String, Record> previousProblems;
+			final Map<String, Result> previousResults;
 			if(cachePath.exists()){
-				previousProblems = readObject(cachePath);
+				previousResults = readObject(cachePath);
 			}else{
-				previousProblems = new HashMap<String, Mojo.Record>();
+				previousResults = new HashMap<String, Mojo.Result>();
 			}
 			
 			List<File> javascriptFiles = new ArrayList<File>();
@@ -112,39 +111,42 @@ public class Mojo extends AbstractMojo {
 			JSHint jshint = new JSHint();
 
 
-			final Map<String, Record> currentProblems = new HashMap<String, Mojo.Record>();
+			final Map<String, Result> currentResults = new HashMap<String, Mojo.Result>();
 			for(File file : matches){
 				getLog().info("  " + file );
-				Record previousProblem = previousProblems.get(file.getAbsolutePath());
-				Record theProblem;
-				if(previousProblem==null || (previousProblem.lastModified.longValue()!=file.lastModified())){
+				Result previousResult = previousResults.get(file.getAbsolutePath());
+				Result theResult;
+				if(previousResult==null || (previousResult.lastModified.longValue()!=file.lastModified())){
 					getLog().info("  " + file );
 					List<Error> errors = jshint.run(new FileInputStream(file), options, globals);
-					if(errors.size()>0){
-						theProblem = new Record(file.getAbsolutePath(), file.lastModified(), errors); 
-						
-					}else{
-						theProblem = null;
-					}
+					theResult = new Result(file.getAbsolutePath(), file.lastModified(), errors); 
 				}else{
-					getLog().info("  " + file + " [displaying cached results because this hasn't changed since " + previousProblem.lastModified + "]");
-					theProblem = previousProblem;
+					getLog().info("  " + file + " [displaying cached results because this hasn't changed since " + previousResult.lastModified + "]");
+					theResult = previousResult;
 				}
 				
-				if(theProblem!=null){
-					currentProblems.put(theProblem.path, theProblem);
-					Record r = theProblem;
-					currentProblems.put(r.path, r);
+				if(theResult!=null){
+					currentResults.put(theResult.path, theResult);
+					Result r = theResult;
+					currentResults.put(r.path, r);
 					for(Error error: r.errors){
 						getLog().error("   " + error.line.intValue() + "," + error.character.intValue() + ": " + error.reason);
 					}
 				}
 			}
 			
-			writeObject(currentProblems, cachePath);
+			writeObject(currentResults, cachePath);
 			
-			if(currentProblems.size()>0){
-				throw new MojoFailureException("JSHint found problems with " + currentProblems.size() + " files");
+			int numProblems = 0;
+			
+			for(Result r : currentResults.values()){
+				if(!r.errors.isEmpty()){
+					numProblems ++;
+				}
+			}
+			
+			if(numProblems>0){
+				throw new MojoFailureException("JSHint found problems with " + numProblems + " files");
 			}
 		} catch (FileNotFoundException e) {
 			throw new MojoExecutionException("Something bad happened", e);
