@@ -1,15 +1,19 @@
 package com.cj.jshintmojo;
 
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.io.IOUtils;
+import org.mozilla.javascript.Context;
 import org.mozilla.javascript.NativeArray;
 import org.mozilla.javascript.NativeObject;
 
 public class JSHint {
-
+	public static void main(String[] args) throws Exception {
+		new JSHint().run(new FileInputStream("/home/stu/projects/cj/cjo/intranet-web/src/main/webapp/javascript/underscore.js"), "", "");
+	}
 	private final Rhino rhino;
 
 	public JSHint() {
@@ -27,9 +31,11 @@ public class JSHint {
 		if(!codePassesMuster){
 			NativeArray errors = rhino.eval("JSHINT.errors");
 
-			for(Object next : errors){
-				Error error = new Error(new JSObject(next));
-				results.add(error);
+			for(Object next : errors){;
+				if(next!=null){ // sometimes it seems that the last error in the list is null
+					Error error = new Error(new JSObject(next));
+					results.add(error);
+				}
 			}
 		}
 
@@ -53,7 +59,7 @@ public class JSHint {
 		private NativeObject a;
 
 		public JSObject(Object o) {
-			super();
+			if(o==null) throw new NullPointerException();
 			this.a = (NativeObject)o;
 		}
 
@@ -64,7 +70,7 @@ public class JSHint {
 
 	public static class Error {
 		public final String id, raw, evidence, reason;
-		public final Double line, character;
+		public final Number line, character;
 
 		public Error(JSObject o) {
 			id = o.dot("id");

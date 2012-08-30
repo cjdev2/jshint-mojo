@@ -47,7 +47,10 @@ public class Mojo extends AbstractMojo {
     private File basedir;
     
     public void execute() throws MojoExecutionException, MojoFailureException {
-    	getLog().info("Found " + directories.size() + " directories");
+//    	getLog().info("Found " + directories.size() + " directories");
+    	if(directories.isEmpty()){
+    		directories.add("src");
+    	}
     	try {
 			List<File> javascriptFiles = new ArrayList<File>();
 			
@@ -59,9 +62,9 @@ public class Mojo extends AbstractMojo {
 			List<File> matches = FunctionalJava.filter(javascriptFiles, new Fn<File, Boolean>(){
 				public Boolean apply(File i) {
 					for(String exclude : excludes){
-						File file = new File(basedir, exclude);
-						if(file.getAbsolutePath().equals(i.getAbsolutePath())){
-							getLog().warn("Excluding " + file);
+						File e = new File(basedir, exclude);
+						if(i.getAbsolutePath().startsWith(e.getAbsolutePath())){
+							getLog().warn("Excluding " + i);
 							return Boolean.FALSE;
 						}
 					}
