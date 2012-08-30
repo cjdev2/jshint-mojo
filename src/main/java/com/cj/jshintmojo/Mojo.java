@@ -4,13 +4,13 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 
+import com.cj.jshintmojo.FunctionalJava.Fn;
 import com.cj.jshintmojo.JSHint.Error;
 
 /**
@@ -56,7 +56,7 @@ public class Mojo extends AbstractMojo {
 			}
 			
 			
-			List<File> matches = filter(javascriptFiles, new Fn<File, Boolean>(){
+			List<File> matches = FunctionalJava.filter(javascriptFiles, new Fn<File, Boolean>(){
 				public Boolean apply(File i) {
 					for(String exclude : excludes){
 						File file = new File(basedir, exclude);
@@ -78,16 +78,13 @@ public class Mojo extends AbstractMojo {
 				List<Error> errors = jshint.run(new FileInputStream(file), options, globals);
 				if(errors.size()>0){
 					problemFiles.add(new FileErrors(file, errors));
+					for(Error error: errors){
+						getLog().error("   " + error.line.intValue() + "," + error.character.intValue() + ": " + error.reason);
+					}
 				}
 			}
 			
 			if(problemFiles.size()>0){
-				for(FileErrors file : problemFiles){
-					getLog().error("FILE: " + file.path.getAbsolutePath());
-					for(Error error: file.errors){
-						getLog().error("   " + error.line.intValue() + "," + error.character.intValue() + ": " + error.reason);
-					}
-				}
 				throw new MojoFailureException("JSHint found problems with " + problemFiles.size() + " files");
 			}
 		} catch (FileNotFoundException e) {
@@ -95,21 +92,7 @@ public class Mojo extends AbstractMojo {
 		}
     }
     
-    interface Fn<Input, Return>{
-    	Return apply(Input i);
-    }
-    private static <T> List<T> filter(List<T> items, Fn<T, Boolean> fn){
-    	List<T> matches = new ArrayList<T>(items.size());
-    	
-    	for(T next : items){
-    		if(fn.apply(next)){
-    			matches.add(next);
-    		}
-    	}
-    	
-    	return matches;
-    }
-    
+   
     private static class FileErrors {
     	final File path;
     	final List<Error> errors;

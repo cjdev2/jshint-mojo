@@ -1,7 +1,5 @@
 package com.cj.jshintmojo;
 
-import java.io.ByteArrayInputStream;
-import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -11,21 +9,6 @@ import org.mozilla.javascript.NativeArray;
 import org.mozilla.javascript.NativeObject;
 
 public class JSHint {
-	public static void main(String[] args) {
-		try {
-			InputStream source = new FileInputStream("/home/stu/projects/cj/cjo/intranet-web/src/test/javascript/account/BulkPidCreatorTest.js");
-			List<Error> errors = new JSHint().run(source, "", "");
-			
-			System.out.println(errors.size() + " errors");
-			for(Error error:errors){
-				System.out.println("On line " + error.line + ", character " + error.character + ": " + error.reason);
-				System.out.println(error.raw);
-			}
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
 
 	private final Rhino rhino;
 
