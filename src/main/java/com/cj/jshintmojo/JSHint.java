@@ -1,14 +1,13 @@
 package com.cj.jshintmojo;
 
-import java.io.FileInputStream;
+import org.apache.commons.io.IOUtils;
+import org.mozilla.javascript.NativeArray;
+import org.mozilla.javascript.NativeObject;
+
 import java.io.InputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-
-import org.apache.commons.io.IOUtils;
-import org.mozilla.javascript.NativeArray;
-import org.mozilla.javascript.NativeObject;
 
 public class JSHint {
 	private final Rhino rhino;
@@ -22,13 +21,18 @@ public class JSHint {
 		final List<Error> results = new ArrayList<JSHint.Error>();
 
 		String sourceAsText = toString(source);
-		
-		Boolean codePassesMuster = rhino.call("JSHINT", sourceAsText, options, globals);
+
+        NativeObject nativeOptions = new NativeObject();
+        for (String option : options.split(",")) {
+            nativeOptions.defineProperty(option, true, NativeObject.READONLY);
+        }
+
+		Boolean codePassesMuster = rhino.call("JSHINT", sourceAsText, nativeOptions, globals);
 
 		if(!codePassesMuster){
 			NativeArray errors = rhino.eval("JSHINT.errors");
 
-			for(Object next : errors){;
+			for(Object next : errors){
 				if(next!=null){ // sometimes it seems that the last error in the list is null
 					Error error = new Error(new JSObject(next));
 					results.add(error);

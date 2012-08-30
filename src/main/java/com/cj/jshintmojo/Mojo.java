@@ -92,7 +92,6 @@ public class Mojo extends AbstractMojo {
 
 			JSHint jshint = new JSHint();
 
-
 			final Map<String, Result> currentResults = new HashMap<String, Result>();
 			for(File file : matches){
 				getLog().info("  " + file );
