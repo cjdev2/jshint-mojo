@@ -6,8 +6,8 @@ import org.mozilla.javascript.Scriptable;
 
 @SuppressWarnings("unchecked") 
 public class Rhino {
-	final Context cx = Context.enter();
-	final Scriptable scope = cx.initStandardObjects();
+	private final Context cx = Context.enter();
+	private final Scriptable scope = cx.initStandardObjects();
 
 	public <T> T eval(String code){
 		return (T) 	cx.evaluateString(scope, code, "<cmd>", 1, null);

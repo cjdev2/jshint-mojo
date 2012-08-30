@@ -11,9 +11,6 @@ import org.mozilla.javascript.NativeArray;
 import org.mozilla.javascript.NativeObject;
 
 public class JSHint {
-	public static void main(String[] args) throws Exception {
-		new JSHint().run(new FileInputStream("/home/stu/projects/cj/cjo/intranet-web/src/main/webapp/javascript/underscore.js"), "", "");
-	}
 	private final Rhino rhino;
 
 	public JSHint() {
@@ -68,6 +65,7 @@ public class JSHint {
 		}
 	}
 
+	@SuppressWarnings("serial")
 	public static class Error implements Serializable {
 		public final String id, raw, evidence, reason;
 		public final Number line, character;
