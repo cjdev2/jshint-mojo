@@ -2,11 +2,11 @@ package com.cj.jshintmojo;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.io.IOUtils;
-import org.mozilla.javascript.Context;
 import org.mozilla.javascript.NativeArray;
 import org.mozilla.javascript.NativeObject;
 
@@ -68,7 +68,7 @@ public class JSHint {
 		}
 	}
 
-	public static class Error {
+	public static class Error implements Serializable {
 		public final String id, raw, evidence, reason;
 		public final Number line, character;
 
