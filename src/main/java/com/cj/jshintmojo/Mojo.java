@@ -62,11 +62,11 @@ public class Mojo extends AbstractMojo {
 			
 			final File cachePath = new File(basedir, "target/lint.cache");
 			
-			final Map<String, Result> previousResults;
-			if(cachePath.exists()){
-				previousResults = Util.readObject(cachePath);
-			}else{
-				previousResults = new HashMap<String, Result>();
+			final Cache cache = readCache(cachePath, new Cache(this.options));
+			
+			if(!options.equals(cache.options)){
+				getLog().warn("Options changed ... clearing cache");
+				cache.previousResults.clear();
 			}
 			
 			List<File> javascriptFiles = new ArrayList<File>();
@@ -95,7 +95,7 @@ public class Mojo extends AbstractMojo {
 			final Map<String, Result> currentResults = new HashMap<String, Result>();
 			for(File file : matches){
 				getLog().info("  " + file );
-				Result previousResult = previousResults.get(file.getAbsolutePath());
+				Result previousResult = cache.previousResults.get(file.getAbsolutePath());
 				Result theResult;
 				if(previousResult==null || (previousResult.lastModified.longValue()!=file.lastModified())){
 					getLog().info("  " + file );
@@ -116,7 +116,7 @@ public class Mojo extends AbstractMojo {
 				}
 			}
 			
-			Util.writeObject(currentResults, cachePath);
+			Util.writeObject(new Cache(options, currentResults), cachePath);
 			
 			int numProblems = 0;
 			
@@ -133,7 +133,19 @@ public class Mojo extends AbstractMojo {
 			throw new MojoExecutionException("Something bad happened", e);
 		}
 	}
-
+	
+	private Cache readCache(File path, Cache defaultCache){
+		try {
+			if(path.exists()){
+				return Util.readObject(path);
+			}
+		} catch (Throwable e) {
+			super.getLog().warn("I was unable to read the cache.  This may be because of an upgrade to the plugin.");
+		}
+		
+		return defaultCache;
+	}
+	
 	private void collect(File directory, List<File> files) {
 		for(File next : directory.listFiles()){
 			if(next.isDirectory()){

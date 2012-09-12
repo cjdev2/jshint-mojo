@@ -24,7 +24,10 @@ public class JSHint {
 
         NativeObject nativeOptions = new NativeObject();
         for (String option : options.split(",")) {
-            nativeOptions.defineProperty(option, true, NativeObject.READONLY);
+        	option = option.trim();
+        	if(!option.isEmpty()){
+        		nativeOptions.defineProperty(option, true, NativeObject.READONLY);
+        	}
         }
 
 		Boolean codePassesMuster = rhino.call("JSHINT", sourceAsText, nativeOptions, globals);
