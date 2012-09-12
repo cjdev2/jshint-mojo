@@ -94,7 +94,6 @@ public class Mojo extends AbstractMojo {
 
 			final Map<String, Result> currentResults = new HashMap<String, Result>();
 			for(File file : matches){
-				getLog().info("  " + file );
 				Result previousResult = cache.previousResults.get(file.getAbsolutePath());
 				Result theResult;
 				if(previousResult==null || (previousResult.lastModified.longValue()!=file.lastModified())){
