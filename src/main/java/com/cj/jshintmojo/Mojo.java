@@ -1,5 +1,7 @@
 package com.cj.jshintmojo;
 
+import static com.cj.jshintmojo.Util.mkdirs;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -47,6 +49,17 @@ public class Mojo extends AbstractMojo {
 	 * @required
 	 */
 	private File basedir;
+	
+	public Mojo() {}
+	
+	public Mojo(String options, String globals, File basedir, List<String> directories, List<String> excludes) {
+		super();
+		this.options = options;
+		this.globals = globals;
+		this.basedir = basedir;
+		this.directories.addAll(directories);
+		this.excludes.addAll(excludes);
+	}
 
 	/*
 	 * TODO: 
@@ -59,8 +72,9 @@ public class Mojo extends AbstractMojo {
 			directories.add("src");
 		}
 		try {
-			
-			final File cachePath = new File(basedir, "target/lint.cache");
+			final File targetPath = new File(basedir, "target");
+			mkdirs(targetPath);
+			final File cachePath = new File(targetPath, "lint.cache");
 			
 			final Cache cache = readCache(cachePath, new Cache(this.options));
 			
@@ -71,8 +85,13 @@ public class Mojo extends AbstractMojo {
 			
 			List<File> javascriptFiles = new ArrayList<File>();
 
-			for(String path: directories){
-				collect(new File(basedir, path), javascriptFiles);
+			for(String next: directories){
+				File path = new File(basedir, next);
+				if(!path.exists() && !path.isDirectory()){
+					getLog().warn("You told me to find tests in " + next + ", but there is nothing there (" + path.getAbsolutePath() + ")");
+				}else{
+					collect(path, javascriptFiles);
+				}
 			}
 
 			List<File> matches = FunctionalJava.filter(javascriptFiles, new Fn<File, Boolean>(){
