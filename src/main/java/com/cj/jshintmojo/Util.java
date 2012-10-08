@@ -68,8 +68,8 @@ public class Util {
 	}
 
 	public static void mkdirs(File path) {
-		if(!path.mkdirs()){
-			throw new RuntimeException("Could not create directory:" + path.getAbsolutePath());
+		if(!path.exists() && !path.mkdirs()){
+			throw new RuntimeException("Could not create directory: " + path.getAbsolutePath());
 		}
 	}
 	
