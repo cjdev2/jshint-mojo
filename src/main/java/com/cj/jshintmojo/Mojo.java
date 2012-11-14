@@ -39,7 +39,7 @@ public class Mojo extends AbstractMojo {
 	private String options = "";
 
 	/**
-	 * @parameter property="globals"
+	 * @parameter 
 	 */
 	private String globals = "";
 
@@ -71,15 +71,23 @@ public class Mojo extends AbstractMojo {
 		if(directories.isEmpty()){
 			directories.add("src");
 		}
+		
+		 getLog().debug("Globals are : " + globals);
+		
 		try {
 			final File targetPath = new File(basedir, "target");
 			mkdirs(targetPath);
 			final File cachePath = new File(targetPath, "lint.cache");
 			
-			final Cache cache = readCache(cachePath, new Cache(this.options));
+			final Cache cache = readCache(cachePath, new Cache(this.options, this.globals));
 			
-			if(!options.equals(cache.options)){
+			if(!nullSafeEquals(options, cache.options)){
 				getLog().warn("Options changed ... clearing cache");
+				cache.previousResults.clear();
+			}
+			
+			if(!nullSafeEquals(globals, cache.globals)){
+				getLog().warn("Globals changed ... clearing cache");
 				cache.previousResults.clear();
 			}
 			
@@ -134,7 +142,7 @@ public class Mojo extends AbstractMojo {
 				}
 			}
 			
-			Util.writeObject(new Cache(options, currentResults), cachePath);
+			Util.writeObject(new Cache(options, this.globals, currentResults), cachePath);
 			
 			int numProblems = 0;
 			
@@ -152,6 +160,12 @@ public class Mojo extends AbstractMojo {
 		}
 	}
 	
+	private boolean nullSafeEquals(String a, String b) {
+		if(a==null && b==null) return true;
+		else if(a==null || b==null) return false;
+		else return a.equals(b);
+	}
+
 	private Cache readCache(File path, Cache defaultCache){
 		try {
 			if(path.exists()){

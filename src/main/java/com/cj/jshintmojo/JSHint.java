@@ -22,15 +22,10 @@ public class JSHint {
 
 		String sourceAsText = toString(source);
 
-        NativeObject nativeOptions = new NativeObject();
-        for (String option : options.split(",")) {
-        	option = option.trim();
-        	if(!option.isEmpty()){
-        		nativeOptions.defineProperty(option, true, NativeObject.READONLY);
-        	}
-        }
+        NativeObject nativeOptions = toJsObject(options);
+        NativeObject nativeGlobals = toJsObject(globals);
 
-		Boolean codePassesMuster = rhino.call("JSHINT", sourceAsText, nativeOptions, globals);
+		Boolean codePassesMuster = rhino.call("JSHINT", sourceAsText, nativeOptions, nativeGlobals);
 
 		if(!codePassesMuster){
 			NativeArray errors = rhino.eval("JSHINT.errors");
@@ -44,6 +39,17 @@ public class JSHint {
 		}
 
 		return results;
+	}
+
+	private NativeObject toJsObject(String options) {
+		NativeObject nativeOptions = new NativeObject();
+        for (String option : options.split(",")) {
+        	option = option.trim();
+        	if(!option.isEmpty()){
+        		nativeOptions.defineProperty(option, true, NativeObject.READONLY);
+        	}
+        }
+		return nativeOptions;
 	}
 
 	private static String toString(InputStream in) {
