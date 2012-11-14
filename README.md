@@ -19,6 +19,7 @@ Usage:
                 </executions>
                 <configuration>
                     <options>indent,camelcase,eqeqeq,forin,immed,latedef,noarg,noempty,nonew,undef,trailing</options>
+                    <globals>require,$,yourFunkyJavascriptModule</globals>
                     <!-- THESE ARE THE PLACES IN WHICH THE PLUGIN WILL SEARCH FOR *.js FILES
                           THIS LIST DEFAULTS TO "src" (i.e. it searches for *.js everywhere under 'src/*')
                     <directories>
