@@ -57,4 +57,25 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
+
+	<!-- BEGIN: STUFF REQUIRED BY THE CENTRAL REPO -->
+	<description>a maven mojo that integrates the 'jshint' javascript preprocessor</description>
+        <url>https://github.com/cjdev/httpobjects</url>
+        <licenses>
+	    <license>
+	        <name>GPL 2 + classpath exception</name>
+                <url>https://raw.github.com/cjdev/jshint-mojo/master/LICENSE</url>
+	    </license>
+        </licenses>
+	<scm>
+	    <url>https://github.com/cjdev/jshint-mojo</url>
+	    <connection>scm:git:https://github.com/cjdev/jshint-mojo.git</connection>
+	</scm>
+        <developers>
+	    <developer>
+	        <name>Stu Penrose</name>
+	        <email>stu@penrose.us</email>
+	    </developer>
+	</developers>
+        <!--   END: STUFF REQUIRED BY THE CENTRAL REPO -->
 </project>
