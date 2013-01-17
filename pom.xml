@@ -27,7 +27,11 @@
 					<target>1.6</target>
 				</configuration>
 			</plugin>
-
+			<plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-release-plugin</artifactId>
+        <version>2.4</version>
+      </plugin>
 		</plugins>
 	</build>
 	<dependencies>
@@ -75,9 +79,11 @@
 	    </license>
         </licenses>
 	<scm>
-	    <url>https://github.com/cjdev/jshint-mojo</url>
-	    <connection>scm:git:https://github.com/cjdev/jshint-mojo.git</connection>
+	    <connection>scm:git:git@github.com:cjdev/jshint-mojo.git</connection>
+	    <url>scm:git:git@github.com:cjdev/jshint-mojo.git</url>
+	    <developerConnection>scm:git:git@github.com:cjdev/jshint-mojo.git</developerConnection>
 	</scm>
+
         <developers>
 	    <developer>
                 <id>stu</id>
