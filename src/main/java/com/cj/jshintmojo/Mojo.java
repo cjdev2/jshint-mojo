@@ -1,6 +1,6 @@
 package com.cj.jshintmojo;
 
-import static com.cj.jshintmojo.Util.mkdirs;
+import static com.cj.jshintmojo.util.Util.mkdirs;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -14,8 +14,13 @@ import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 
-import com.cj.jshintmojo.FunctionalJava.Fn;
-import com.cj.jshintmojo.JSHint.Error;
+import com.cj.jshintmojo.cache.Cache;
+import com.cj.jshintmojo.cache.Result;
+import com.cj.jshintmojo.jshint.FunctionalJava;
+import com.cj.jshintmojo.jshint.JSHint;
+import com.cj.jshintmojo.jshint.FunctionalJava.Fn;
+import com.cj.jshintmojo.jshint.JSHint.Error;
+import com.cj.jshintmojo.util.Util;
 
 /**
  * @goal lint

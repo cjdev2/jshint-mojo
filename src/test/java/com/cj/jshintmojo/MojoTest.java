@@ -1,8 +1,8 @@
 package com.cj.jshintmojo;
 
-import static com.cj.jshintmojo.Util.deleteDirectory;
-import static com.cj.jshintmojo.Util.mkdirs;
-import static com.cj.jshintmojo.Util.tempDir;
+import static com.cj.jshintmojo.util.Util.deleteDirectory;
+import static com.cj.jshintmojo.util.Util.mkdirs;
+import static com.cj.jshintmojo.util.Util.tempDir;
 import static junit.framework.Assert.assertEquals;
 
 import java.io.File;

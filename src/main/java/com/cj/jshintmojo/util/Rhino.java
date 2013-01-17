@@ -1,4 +1,4 @@
-package com.cj.jshintmojo;
+package com.cj.jshintmojo.util;
 
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Function;

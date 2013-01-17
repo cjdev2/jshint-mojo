@@ -1,4 +1,4 @@
-package com.cj.jshintmojo;
+package com.cj.jshintmojo.jshint;
 
 import java.util.ArrayList;
 import java.util.List;

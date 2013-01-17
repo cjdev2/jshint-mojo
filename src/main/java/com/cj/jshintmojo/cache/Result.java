@@ -1,15 +1,15 @@
-package com.cj.jshintmojo;
+package com.cj.jshintmojo.cache;
 
 import java.io.Serializable;
 import java.util.List;
 
-import com.cj.jshintmojo.JSHint.Error;
+import com.cj.jshintmojo.jshint.JSHint.Error;
 
 @SuppressWarnings("serial")
 public class Result implements Serializable {
-	final String path;
-	final Long lastModified;
-	final List<Error> errors;
+    public final String path;
+    public final Long lastModified;
+    public final List<Error> errors;
 	
 	public Result(String path, Long lastModified, List<Error> errors) {
 		super();

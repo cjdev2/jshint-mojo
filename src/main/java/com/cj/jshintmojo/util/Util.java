@@ -1,4 +1,4 @@
-package com.cj.jshintmojo;
+package com.cj.jshintmojo.util;
 
 import java.io.File;
 import java.io.FileInputStream;

@@ -8,6 +8,9 @@ import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 
+import com.cj.jshintmojo.cache.Result;
+import com.cj.jshintmojo.util.Util;
+
 /**
  * @goal dumpCache
  */

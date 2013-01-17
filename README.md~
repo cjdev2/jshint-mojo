@@ -29,7 +29,6 @@ Usage:
                     <excludes>
                         <!-- EXCLUDES ARE RESOLVED RELATIVE TO THE BASEDIR OF THE MODULE 
   					            <exclude>src/main/webapp/hackyScript.js</exclude>
-  					            <exclude>src/main/webapp/myDirectoryForThirdyPartyStuff</exclude>
                         -->
                     </excludes>
                 </configuration>
