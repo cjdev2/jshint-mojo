@@ -9,7 +9,6 @@ Usage:
           <plugin>
                 <groupId>com.cj.jshintmojo</groupId>
                 <artifactId>jshint-maven-plugin</artifactId>
-                <version>0.0.6-SNAPSHOT</version>
                 <executions>
                     <execution>
                         <goals>
