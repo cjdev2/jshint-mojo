@@ -31,6 +31,8 @@ Usage:
   					            <exclude>src/main/webapp/myDirectoryForThirdyPartyStuff</exclude>
                         -->
                     </excludes>
+                    <!-- optional, default is true -->
+                    <failOnError>false</failOnError>
                 </configuration>
            </plugin>
 ~~~~~
