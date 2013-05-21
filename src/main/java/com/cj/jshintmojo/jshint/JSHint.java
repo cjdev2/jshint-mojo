@@ -59,13 +59,13 @@ public class JSHint {
 		    name = option.substring(0, valueDelimiter);
 		    String rest = option.substring(valueDelimiter+1).trim();
 		    if (rest.matches("[0-9]+")) {
-                value = Integer.parseInt(rest);
-            } else if (rest.equals("true")) {
-                value = Boolean.TRUE;
-            } else if (rest.equals("false")) {
-                value = Boolean.FALSE;
-            } else {
-                value = rest;		        
+		        value = Integer.parseInt(rest);
+		    } else if (rest.equals("true")) {
+		        value = Boolean.TRUE;
+		    } else if (rest.equals("false")) {
+		        value = Boolean.FALSE;
+		    } else {
+		        value = rest;		        
 		    }
 		}
 		nativeOptions.defineProperty(name, value, NativeObject.READONLY);
