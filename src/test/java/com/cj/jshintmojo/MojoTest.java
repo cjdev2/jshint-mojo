@@ -22,7 +22,7 @@ public class MojoTest {
 			Mojo mojo = new Mojo("", "", 
 							directory, 
 							Collections.singletonList("src/main/resources/nonexistentDirectory"), 
-							Collections.<String>emptyList());
+							Collections.<String>emptyList(),true);
 			mojo.setLog(log);
 			
 			// when
