@@ -31,8 +31,14 @@ Usage:
   					            <exclude>src/main/webapp/myDirectoryForThirdyPartyStuff</exclude>
                         -->
                     </excludes>
-                    <!-- optional, default is true -->
-                    <failOnError>false</failOnError>
+                    <!-- CONTROLS WHETHER THE PLUGIN FAILS THE BUILD WHEN JSHINT IS UNHAPPY.
+                         This defaults to  "true".  
+                         Setting this to "false" is discouraged, as it removes most of the benefit of using this plugin.
+                         Instead, if you have problem files that you can't fix:
+                            * disable/override jshint on a per-file basis (http://www.jshint.com/docs/#config), or
+                            * tell the plugin to specifically exclude them in the 'excludes' section
+                    <failOnError>true</failOnError>
+                     -->
                 </configuration>
            </plugin>
 ~~~~~
