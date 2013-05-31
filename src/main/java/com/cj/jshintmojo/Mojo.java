@@ -49,6 +49,11 @@ public class Mojo extends AbstractMojo {
 	private String globals = "";
 
 	/**
+	 * @parameter 
+	 */
+	private Boolean failOnError = true;
+
+	/**
 	 * @parameter default-value="${basedir}
 	 * @readonly
 	 * @required
@@ -57,13 +62,14 @@ public class Mojo extends AbstractMojo {
 	
 	public Mojo() {}
 	
-	public Mojo(String options, String globals, File basedir, List<String> directories, List<String> excludes) {
+	public Mojo(String options, String globals, File basedir, List<String> directories, List<String> excludes, boolean failOnError) {
 		super();
 		this.options = options;
 		this.globals = globals;
 		this.basedir = basedir;
 		this.directories.addAll(directories);
 		this.excludes.addAll(excludes);
+		this.failOnError = failOnError;
 	}
 
 	/*
@@ -157,8 +163,8 @@ public class Mojo extends AbstractMojo {
 				}
 			}
 			
-			if(numProblems>0){
-				throw new MojoFailureException("JSHint found problems with " + numProblems + " files");
+			if(numProblems>0 && failOnError){
+				throw new MojoExecutionException("JSHint found problems with " + numProblems + " files");
 			}
 		} catch (FileNotFoundException e) {
 			throw new MojoExecutionException("Something bad happened", e);
