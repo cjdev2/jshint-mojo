@@ -11,7 +11,7 @@ import java.util.Collections;
 import org.junit.Test;
 
 public class MojoTest {
-	
+
 	@Test
 	public void warnsUsersWhenConfiguredToWorkWithNonexistentDirectories() throws Exception {
 		File directory = tempDir();
@@ -22,21 +22,21 @@ public class MojoTest {
 			Mojo mojo = new Mojo("", "", 
 							directory, 
 							Collections.singletonList("src/main/resources/nonexistentDirectory"), 
-							Collections.<String>emptyList(),true);
+							Collections.<String>emptyList(),true, null);
 			mojo.setLog(log);
-			
+
 			// when
 			mojo.execute();
-			
+
 			// then
 			assertEquals(1, log.messagesForLevel("warn").size());
-			assertEquals("You told me to find tests in src/main/resources/nonexistentDirectory, but there is nothing there (" + directory.getAbsolutePath() + "/src/main/resources/nonexistentDirectory)", 
+			assertEquals("You told me to find tests in src/main/resources/nonexistentDirectory, but there is nothing there (" + directory.getAbsolutePath() + "/src/main/resources/nonexistentDirectory)",
 								log.messagesForLevel("warn").get(0).content.toString());
-			
-			
+
+
 		}finally{
 			deleteDirectory(directory);
 		}
 	}
-	
+
 }
