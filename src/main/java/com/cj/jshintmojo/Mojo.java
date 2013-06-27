@@ -5,14 +5,18 @@ import static com.cj.jshintmojo.util.Util.mkdirs;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.codehaus.plexus.util.StringUtils;
 
 import com.cj.jshintmojo.cache.Cache;
 import com.cj.jshintmojo.cache.Result;
@@ -20,6 +24,7 @@ import com.cj.jshintmojo.jshint.FunctionalJava;
 import com.cj.jshintmojo.jshint.JSHint;
 import com.cj.jshintmojo.jshint.FunctionalJava.Fn;
 import com.cj.jshintmojo.jshint.JSHint.Error;
+import com.cj.jshintmojo.util.OptionsParser;
 import com.cj.jshintmojo.util.Util;
 
 /**
@@ -49,6 +54,11 @@ public class Mojo extends AbstractMojo {
 	private String globals = "";
 
 	/**
+	 * @parameter property="configFile"
+	 */
+	private String configFile = "";
+
+	/**
 	 * @parameter 
 	 */
 	private Boolean failOnError = true;
@@ -62,7 +72,7 @@ public class Mojo extends AbstractMojo {
 	
 	public Mojo() {}
 	
-	public Mojo(String options, String globals, File basedir, List<String> directories, List<String> excludes, boolean failOnError) {
+	public Mojo(String options, String globals, File basedir, List<String> directories, List<String> excludes, boolean failOnError, String configFile) {
 		super();
 		this.options = options;
 		this.globals = globals;
@@ -70,6 +80,7 @@ public class Mojo extends AbstractMojo {
 		this.directories.addAll(directories);
 		this.excludes.addAll(excludes);
 		this.failOnError = failOnError;
+		this.configFile = configFile;
 	}
 
 	/*
@@ -79,6 +90,10 @@ public class Mojo extends AbstractMojo {
 	 */
 
 	public void execute() throws MojoExecutionException, MojoFailureException {
+		if (StringUtils.isNotBlank(this.configFile)) {
+			getLog().info("Reading JSHint settings from configuration file: " + this.configFile);
+			processConfigFile();
+		}
 		if(directories.isEmpty()){
 			directories.add("src");
 		}
@@ -199,4 +214,28 @@ public class Mojo extends AbstractMojo {
 		}
 	}
 
+	/**
+	 * Read contents of the specified config file and use the values defined there instead of the ones defined directly in pom.xml config.
+	 *
+	 * @throws MojoExecutionException if the specified file cannot be processed
+	 */
+	private void processConfigFile() throws MojoExecutionException {
+		byte[] configFileContents;
+		try {
+			configFileContents = FileUtils.readFileToByteArray(new File(configFile));
+		} catch (IOException e) {
+			throw new MojoExecutionException("Unable to read config file located in " + configFile);
+		}
+
+		Set<String> globalsSet = OptionsParser.extractGlobals(configFileContents);
+		Set<String> optionsSet = OptionsParser.extractOptions(configFileContents);
+
+		if (globalsSet.size() > 0) {
+			this.globals = StringUtils.join(globalsSet.iterator(), ",");
+		}
+
+		if (optionsSet.size() > 0) {
+			this.options = StringUtils.join(optionsSet.iterator(), ",");
+		}
+	}
 }
