@@ -67,7 +67,7 @@ Configuration options:
 | options         |                               |   List of comma-separated [JSHint options](http://www.jshint.com/docs/#options)            |
 | globals         |                               |   List of comma-separated [JSHint globals](http://www.jshint.com/docs/#usage)             |
 | configFile      |                               |   Path to a JSHint JSON config file. Its contents will override values set in `options` and `globals`, if present. Please note that block and line comments will be stripped prior to processing so it's OK to include them. |
-| directories     |  `<directory>src</directory>` |   Locations in which the pluging will search for *.js files |
+| directories     |  `<directory>src</directory>` |   Locations in which the plugin will search for *.js files |
 | excludes        |                               |   Excludes are resolved relative to the basedir of the module |
 | failOnError     |                  true         |   Controls whether the plugin fails the build when JSHint is unhappy. Setting this to `false` is discouraged, as it removes most of the benefit of using this plugin. Instead, if you have problem files that you can't fix [disable/override JSHint on a per-file basis](http://www.jshint.com/docs/#config), or tell the plugin to specifically exclude them in the `excludes` section |
 
