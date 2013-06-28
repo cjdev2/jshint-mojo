@@ -170,16 +170,27 @@ public class Mojo extends AbstractMojo {
 			
 			Util.writeObject(new Cache(options, this.globals, currentResults), cachePath);
 			
-			int numProblems = 0;
 			
+			int numProblematicFiles = 0;
 			for(Result r : currentResults.values()){
 				if(!r.errors.isEmpty()){
-					numProblems ++;
+					numProblematicFiles ++;
 				}
 			}
 			
-			if(numProblems>0 && failOnError){
-				throw new MojoExecutionException("JSHint found problems with " + numProblems + " files");
+			if(numProblematicFiles > 0) {
+				String errorMessage = "JSHint found problems with " + numProblematicFiles + " file";
+
+				// pluralise
+				if (numProblematicFiles > 1) {
+					errorMessage += "s";
+				}
+
+				if (failOnError) {
+					throw new MojoExecutionException(errorMessage);
+				} else {
+					getLog().info(errorMessage);
+				}
 			}
 		} catch (FileNotFoundException e) {
 			throw new MojoExecutionException("Something bad happened", e);
