@@ -170,21 +170,41 @@ public class Mojo extends AbstractMojo {
 			
 			Util.writeObject(new Cache(options, this.globals, currentResults), cachePath);
 			
+            char NEWLINE = '\n';
+            StringBuilder errorRecap = new StringBuilder(NEWLINE);
 			
 			int numProblematicFiles = 0;
 			for(Result r : currentResults.values()){
 				if(!r.errors.isEmpty()){
 					numProblematicFiles ++;
+
+                    errorRecap
+                        .append(NEWLINE)
+                        .append(r.path)
+                        .append(NEWLINE);
+
+					for(Error error: r.errors){
+						errorRecap
+                            .append("   ")
+                            .append(error.line.intValue())
+                            .append(",")
+                            .append(error.character.intValue())
+                            .append(": ")
+                            .append(error.reason)
+                            .append(NEWLINE);
+					}
 				}
 			}
 			
 			if(numProblematicFiles > 0) {
-				String errorMessage = "JSHint found problems with " + numProblematicFiles + " file";
+				String errorMessage = "\nJSHint found problems with " + numProblematicFiles + " file";
 
 				// pluralise
 				if (numProblematicFiles > 1) {
 					errorMessage += "s";
 				}
+
+                errorMessage += errorRecap.toString();
 
 				if (failOnError) {
 					throw new MojoExecutionException(errorMessage);
