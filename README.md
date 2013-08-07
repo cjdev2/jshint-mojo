@@ -3,7 +3,12 @@ Simple JSHint mojo
 
 It's real simple, and it runs [JSHint](http://www.jshint.com/) on your *.js files.
 
-Example usage:
+Goals:
+--------------
+
+* jshint:lint -> runs jshint on your files (per your configuration settings)
+
+Example configuration:
 --------------
 
 ~~~~~ xml
