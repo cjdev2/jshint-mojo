@@ -58,6 +58,12 @@ public class Mojo extends AbstractMojo {
 	 */
 	private String configFile = "";
 
+
+    /**
+     * @parameter expression="${jshint.version}"
+     */
+    private String version = "2.1.9";
+	
 	/**
 	 * @parameter 
 	 */
@@ -90,6 +96,17 @@ public class Mojo extends AbstractMojo {
 	 */
 
 	public void execute() throws MojoExecutionException, MojoFailureException {
+	    getLog().info("using jshint version " + version);
+
+        JSHint jshint;
+        try {
+            jshint = new JSHint(version);
+        } catch (IllegalArgumentException err) {
+            getLog().debug(err);
+            throw new MojoFailureException(err.getMessage());
+        }
+        
+        
 		if (StringUtils.isNotBlank(this.configFile)) {
 			getLog().info("Reading JSHint settings from configuration file: " + this.configFile);
 			processConfigFile();
@@ -143,7 +160,6 @@ public class Mojo extends AbstractMojo {
 				}
 			});
 
-			JSHint jshint = new JSHint();
 
 			final Map<String, Result> currentResults = new HashMap<String, Result>();
 			for(File file : matches){

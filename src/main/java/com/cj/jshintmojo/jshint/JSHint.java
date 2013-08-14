@@ -1,6 +1,7 @@
 package com.cj.jshintmojo.jshint;
 
 import org.apache.commons.io.IOUtils;
+import org.mozilla.javascript.EcmaError;
 import org.mozilla.javascript.NativeArray;
 import org.mozilla.javascript.NativeObject;
 
@@ -9,14 +10,43 @@ import com.cj.jshintmojo.util.Rhino;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class JSHint {
+    private static final Map<String, String> EMBEDDED_VERSIONS = Collections.unmodifiableMap(new HashMap<String, String>(){{
+        put("2.1.9", "jshint-rhino-2.1.9.js");
+        put("r12", "jshint-r12.js");
+    }});
     private final Rhino rhino;
-
-    public JSHint() {
+    
+    public JSHint(String version) {
+        final String resource = EMBEDDED_VERSIONS.get(version);
+        if(resource==null){
+            StringBuffer knownVersions = new StringBuffer();
+            for(String v : EMBEDDED_VERSIONS.keySet()){
+                knownVersions.append("\n    " + v);
+            }
+            throw new IllegalArgumentException("I don't know about the \"" + version + "\" version of jshint.  Here are the versions I /do/ know about: " + knownVersions);
+        }
         rhino = new Rhino();
-        rhino.eval(resourceAsString("jshint.js"));
+        try {
+            rhino.eval(
+            		"print=function(){};" +
+            		"quit=function(){};" +
+            		"arguments=[];");
+            
+            rhino.eval(commentOutTheShebang(resourceAsString(resource)));
+        } catch (EcmaError e) {
+            throw new RuntimeException("Javascript eval error:" + e.getScriptStackTrace(), e);
+        }
+    }
+
+    private String commentOutTheShebang(String code) {
+        String minusShebang = code.startsWith("#!")?"//" + code : code;
+        return minusShebang;
     }
 
     public List<Error> run(InputStream source, String options, String globals) {

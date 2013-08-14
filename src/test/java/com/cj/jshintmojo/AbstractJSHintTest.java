@@ -10,7 +10,13 @@ import org.junit.Test;
 import com.cj.jshintmojo.jshint.JSHint;
 import com.cj.jshintmojo.jshint.JSHint.Error;
 
-public class JSHintTest {
+public abstract class AbstractJSHintTest {
+    private final String jshintVersion;
+    
+    public AbstractJSHintTest(String jshintVersion) {
+        super();
+        this.jshintVersion = jshintVersion;
+    }
 
     @Test
     public void booleanOptionsCanBeFalse(){
@@ -18,7 +24,7 @@ public class JSHintTest {
         final String globals = "";
         final String options = "evil:false";
         final InputStream code = toStream("eval('var x = 1 + 1;');");
-        final JSHint jsHint = new JSHint();
+        final JSHint jsHint = new JSHint(jshintVersion);
 
         // when
         List<JSHint.Error> errors = jsHint.run(code, options, globals);
@@ -26,16 +32,20 @@ public class JSHintTest {
         // then
         Assert.assertNotNull(errors);
         Assert.assertEquals(1, errors.size());
-        Assert.assertEquals("eval is evil.", errors.get(0).reason);
+        Assert.assertEquals(expectedEvalIsEvilMessage(), errors.get(0).reason);
     }
-
+    
+    protected String expectedEvalIsEvilMessage(){
+        return "eval can be harmful.";
+    }
+    
     @Test
     public void booleanOptionsCanBeTrue(){
         // given
         final String globals = "";
         final String options = "evil:true";
         final InputStream code = toStream("eval('var x = 1 + 1;');");
-        final JSHint jsHint = new JSHint();
+        final JSHint jsHint = new JSHint(jshintVersion);
 
         // when
         List<JSHint.Error> errors = jsHint.run(code, options, globals);
@@ -51,7 +61,7 @@ public class JSHintTest {
         final String globals = "alert";
         final String options = "indent:4";
         final InputStream code = toStream(" alert('Bad Indentation');");
-        final JSHint jsHint = new JSHint();
+        final JSHint jsHint = new JSHint(jshintVersion);
 
         // when
         List<JSHint.Error> errors = jsHint.run(code, options, globals);
@@ -68,7 +78,7 @@ public class JSHintTest {
         final String globals = "";
         final String options = "maxparams:1";
         final InputStream code = toStream("function cowboyFunction(param1, param2){return 'yee-haw!';}");
-        final JSHint jsHint = new JSHint();
+        final JSHint jsHint = new JSHint(jshintVersion);
 
         // when
         List<JSHint.Error> errors = jsHint.run(code, options, globals);
@@ -76,7 +86,11 @@ public class JSHintTest {
         // then
         Assert.assertNotNull(errors);
         Assert.assertEquals(1, errors.size());
-        Assert.assertEquals("Too many parameters per function (2).", errors.get(0).raw);
+        Assert.assertEquals(expectedErrorMessageForTwoTooManyParameters(), errors.get(0).reason);
+    }
+    
+    protected String expectedErrorMessageForTwoTooManyParameters(){
+        return "This function has too many parameters. (2)";
     }
 
     @Test
@@ -85,7 +99,7 @@ public class JSHintTest {
         final String globals = "Foo";
         final String options = "nonew";
         final InputStream code = toStream("new Foo();");
-        final JSHint jsHint = new JSHint();
+        final JSHint jsHint = new JSHint(jshintVersion);
 
         // when
         List<JSHint.Error> errors = jsHint.run(code, options, globals);
@@ -102,7 +116,7 @@ public class JSHintTest {
         final String globals = "someGlobal";
         final String options = "undef";
         final InputStream code = toStream("(function(){var value = someGlobal();}());");
-        final JSHint jsHint = new JSHint();
+        final JSHint jsHint = new JSHint(jshintVersion);
 
         // when
         List<JSHint.Error> errors = jsHint.run(code, options, globals);
