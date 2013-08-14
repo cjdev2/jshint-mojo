@@ -16,21 +16,11 @@ import java.util.List;
 import java.util.Map;
 
 public class JSHint {
-    private static final Map<String, String> EMBEDDED_VERSIONS = Collections.unmodifiableMap(new HashMap<String, String>(){{
-        put("2.1.9", "jshint-rhino-2.1.9.js");
-        put("r12", "jshint-r12.js");
-    }});
+    
     private final Rhino rhino;
     
-    public JSHint(String version) {
-        final String resource = EMBEDDED_VERSIONS.get(version);
-        if(resource==null){
-            StringBuffer knownVersions = new StringBuffer();
-            for(String v : EMBEDDED_VERSIONS.keySet()){
-                knownVersions.append("\n    " + v);
-            }
-            throw new IllegalArgumentException("I don't know about the \"" + version + "\" version of jshint.  Here are the versions I /do/ know about: " + knownVersions);
-        }
+    public JSHint(String jshintCode) {
+        
         rhino = new Rhino();
         try {
             rhino.eval(
@@ -38,7 +28,7 @@ public class JSHint {
             		"quit=function(){};" +
             		"arguments=[];");
             
-            rhino.eval(commentOutTheShebang(resourceAsString(resource)));
+            rhino.eval(commentOutTheShebang(resourceAsString(jshintCode)));
         } catch (EcmaError e) {
             throw new RuntimeException("Javascript eval error:" + e.getScriptStackTrace(), e);
         }

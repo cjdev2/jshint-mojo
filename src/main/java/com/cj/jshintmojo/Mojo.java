@@ -13,16 +13,19 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugin.logging.Log;
 import org.codehaus.plexus.util.StringUtils;
 
 import com.cj.jshintmojo.cache.Cache;
 import com.cj.jshintmojo.cache.Result;
+import com.cj.jshintmojo.jshint.EmbeddedJshintCode;
 import com.cj.jshintmojo.jshint.FunctionalJava;
-import com.cj.jshintmojo.jshint.JSHint;
 import com.cj.jshintmojo.jshint.FunctionalJava.Fn;
+import com.cj.jshintmojo.jshint.JSHint;
 import com.cj.jshintmojo.jshint.JSHint.Error;
 import com.cj.jshintmojo.util.OptionsParser;
 import com.cj.jshintmojo.util.Util;
@@ -32,6 +35,7 @@ import com.cj.jshintmojo.util.Util;
  * @phase compile
  */
 public class Mojo extends AbstractMojo {
+    private final Log log = getLog();
 
 	/**
 	 * @parameter property="directories"
@@ -46,7 +50,7 @@ public class Mojo extends AbstractMojo {
 	/**
 	 * @parameter property="options"
 	 */
-	private String options = "";
+	private String options = null;
 
 	/**
 	 * @parameter 
@@ -88,167 +92,224 @@ public class Mojo extends AbstractMojo {
 		this.failOnError = failOnError;
 		this.configFile = configFile;
 	}
-
-	/*
-	 * TODO: 
-	 *   1) Add a way to skip (i.e. 'mvn install -Dlint.skip=true')
-	 *   2) Make it parallelizable: i.e. 'mvn install -Dlint.threads=4'
-	 */
-
+	
 	public void execute() throws MojoExecutionException, MojoFailureException {
 	    getLog().info("using jshint version " + version);
 
-        JSHint jshint;
-        try {
-            jshint = new JSHint(version);
-        } catch (IllegalArgumentException err) {
-            getLog().debug(err);
-            throw new MojoFailureException(err.getMessage());
-        }
-        
-        
-		if (StringUtils.isNotBlank(this.configFile)) {
-			getLog().info("Reading JSHint settings from configuration file: " + this.configFile);
-			processConfigFile();
-		}
+	    final String jshintCode = getEmbeddedJshintCode(version);
+	    
+        final JSHint jshint = new JSHint(jshintCode);
+
+        final Config config = readConfig(this.options, this.globals, this.configFile, this.basedir, log);
+        final Cache.Hash cacheHash = new Cache.Hash(config.options, config.globals, this.version, this.configFile, this.directories, this.excludes);
+		
 		if(directories.isEmpty()){
 			directories.add("src");
 		}
-		
-		 getLog().debug("Globals are : " + globals);
 		
 		try {
 			final File targetPath = new File(basedir, "target");
 			mkdirs(targetPath);
 			final File cachePath = new File(targetPath, "lint.cache");
+			final Cache cache = readCache(cachePath, cacheHash);
 			
-			final Cache cache = readCache(cachePath, new Cache(this.options, this.globals));
+			final List<File> files = findFilesToCheck();
+
+			final Map<String, Result> currentResults = lintTheFiles(jshint, cache, files, config, log);
 			
-			if(!nullSafeEquals(options, cache.options)){
-				getLog().warn("Options changed ... clearing cache");
-				cache.previousResults.clear();
-			}
+			Util.writeObject(new Cache(cacheHash, currentResults), cachePath);
 			
-			if(!nullSafeEquals(globals, cache.globals)){
-				getLog().warn("Globals changed ... clearing cache");
-				cache.previousResults.clear();
-			}
-			
-			List<File> javascriptFiles = new ArrayList<File>();
-
-			for(String next: directories){
-				File path = new File(basedir, next);
-				if(!path.exists() && !path.isDirectory()){
-					getLog().warn("You told me to find tests in " + next + ", but there is nothing there (" + path.getAbsolutePath() + ")");
-				}else{
-					collect(path, javascriptFiles);
-				}
-			}
-
-			List<File> matches = FunctionalJava.filter(javascriptFiles, new Fn<File, Boolean>(){
-				public Boolean apply(File i) {
-					for(String exclude : excludes){
-						File e = new File(basedir, exclude);
-						if(i.getAbsolutePath().startsWith(e.getAbsolutePath())){
-							getLog().warn("Excluding " + i);
-							
-							return Boolean.FALSE;
-						}
-					}
-
-					return Boolean.TRUE;
-				}
-			});
-
-
-			final Map<String, Result> currentResults = new HashMap<String, Result>();
-			for(File file : matches){
-				Result previousResult = cache.previousResults.get(file.getAbsolutePath());
-				Result theResult;
-				if(previousResult==null || (previousResult.lastModified.longValue()!=file.lastModified())){
-					getLog().info("  " + file );
-					List<Error> errors = jshint.run(new FileInputStream(file), options, globals);
-					theResult = new Result(file.getAbsolutePath(), file.lastModified(), errors); 
-				}else{
-					getLog().info("  " + file + " [no change]");
-					theResult = previousResult;
-				}
-				
-				if(theResult!=null){
-					currentResults.put(theResult.path, theResult);
-					Result r = theResult;
-					currentResults.put(r.path, r);
-					for(Error error: r.errors){
-						getLog().error("   " + error.line.intValue() + "," + error.character.intValue() + ": " + error.reason);
-					}
-				}
-			}
-			
-			Util.writeObject(new Cache(options, this.globals, currentResults), cachePath);
-			
-            char NEWLINE = '\n';
-            StringBuilder errorRecap = new StringBuilder(NEWLINE);
-			
-			int numProblematicFiles = 0;
-			for(Result r : currentResults.values()){
-				if(!r.errors.isEmpty()){
-					numProblematicFiles ++;
-
-                    errorRecap
-                        .append(NEWLINE)
-                        .append(r.path)
-                        .append(NEWLINE);
-
-					for(Error error: r.errors){
-						errorRecap
-                            .append("   ")
-                            .append(error.line.intValue())
-                            .append(",")
-                            .append(error.character.intValue())
-                            .append(": ")
-                            .append(error.reason)
-                            .append(NEWLINE);
-					}
-				}
-			}
-			
-			if(numProblematicFiles > 0) {
-				String errorMessage = "\nJSHint found problems with " + numProblematicFiles + " file";
-
-				// pluralise
-				if (numProblematicFiles > 1) {
-					errorMessage += "s";
-				}
-
-                errorMessage += errorRecap.toString();
-
-				if (failOnError) {
-					throw new MojoExecutionException(errorMessage);
-				} else {
-					getLog().info(errorMessage);
-				}
-			}
+            handleResults(currentResults);
+            
 		} catch (FileNotFoundException e) {
 			throw new MojoExecutionException("Something bad happened", e);
 		}
 	}
 	
-	private boolean nullSafeEquals(String a, String b) {
+	static class Config {
+	    final String options, globals;
+
+        public Config(String options, String globals) {
+            super();
+            this.options = options;
+            this.globals = globals;
+        }
+	    
+	}
+	
+    private static Config readConfig(String options, String globals, String configFileParam, File basedir, Log log) throws MojoExecutionException {
+        final File jshintRc = findJshintrc(basedir);
+        final File configFile = StringUtils.isNotBlank(configFileParam)?new File(configFileParam):null;
+        
+        final Config config;
+        if(options==null){
+            if(configFile!=null){
+                log.info("Using configuration file: " + jshintRc.getAbsolutePath());
+                config = processConfigFile(configFile);
+            }else if(jshintRc!=null){
+                log.info("Using configuration file: " + jshintRc.getAbsolutePath());
+                config = processConfigFile(jshintRc);
+            }else{
+                config = new Config("", globals);
+            }
+        }else{
+            config = new Config(options, globals);
+        }
+        
+        return config;
+    }
+
+    private List<File> findFilesToCheck() {
+        List<File> javascriptFiles = new ArrayList<File>();
+
+        for(String next: directories){
+        	File path = new File(basedir, next);
+        	if(!path.exists() && !path.isDirectory()){
+        		getLog().warn("You told me to find tests in " + next + ", but there is nothing there (" + path.getAbsolutePath() + ")");
+        	}else{
+        		collect(path, javascriptFiles);
+        	}
+        }
+
+        List<File> matches = FunctionalJava.filter(javascriptFiles, new Fn<File, Boolean>(){
+        	public Boolean apply(File i) {
+        		for(String exclude : excludes){
+        			File e = new File(basedir, exclude);
+        			if(i.getAbsolutePath().startsWith(e.getAbsolutePath())){
+        				getLog().warn("Excluding " + i);
+        				
+        				return Boolean.FALSE;
+        			}
+        		}
+
+        		return Boolean.TRUE;
+        	}
+        });
+        return matches;
+    }
+
+    private static Map<String, Result> lintTheFiles(final JSHint jshint, final Cache cache, List<File> filesToCheck, final Config config, final Log log) throws FileNotFoundException {
+        final Map<String, Result> currentResults = new HashMap<String, Result>();
+        for(File file : filesToCheck){
+        	Result previousResult = cache.previousResults.get(file.getAbsolutePath());
+        	Result theResult;
+        	if(previousResult==null || (previousResult.lastModified.longValue()!=file.lastModified())){
+        		log.info("  " + file );
+        		List<Error> errors = jshint.run(new FileInputStream(file), config.options, config.globals);
+        		theResult = new Result(file.getAbsolutePath(), file.lastModified(), errors); 
+        	}else{
+        		log.info("  " + file + " [no change]");
+        		theResult = previousResult;
+        	}
+        	
+        	if(theResult!=null){
+        		currentResults.put(theResult.path, theResult);
+        		Result r = theResult;
+        		currentResults.put(r.path, r);
+        		for(Error error: r.errors){
+        			log.error("   " + error.line.intValue() + "," + error.character.intValue() + ": " + error.reason);
+        		}
+        	}
+        }
+        return currentResults;
+    }
+
+    private void handleResults(final Map<String, Result> currentResults) throws MojoExecutionException {
+        char NEWLINE = '\n';
+        StringBuilder errorRecap = new StringBuilder(NEWLINE);
+        
+        int numProblematicFiles = 0;
+        for(Result r : currentResults.values()){
+        	if(!r.errors.isEmpty()){
+        		numProblematicFiles ++;
+
+                errorRecap
+                    .append(NEWLINE)
+                    .append(r.path)
+                    .append(NEWLINE);
+
+        		for(Error error: r.errors){
+        			errorRecap
+                        .append("   ")
+                        .append(error.line.intValue())
+                        .append(",")
+                        .append(error.character.intValue())
+                        .append(": ")
+                        .append(error.reason)
+                        .append(NEWLINE);
+        		}
+        	}
+        }
+        
+        if(numProblematicFiles > 0) {
+        	String errorMessage = "\nJSHint found problems with " + numProblematicFiles + " file";
+
+        	// pluralise
+        	if (numProblematicFiles > 1) {
+        		errorMessage += "s";
+        	}
+
+            errorMessage += errorRecap.toString();
+
+        	if (failOnError) {
+        		throw new MojoExecutionException(errorMessage);
+        	} else {
+        		getLog().info(errorMessage);
+        	}
+        }
+    }
+
+    @SuppressWarnings("serial")
+    private static String getEmbeddedJshintCode(String version) throws MojoFailureException {
+        
+        final String resource = EmbeddedJshintCode.EMBEDDED_VERSIONS.get(version);
+        if(resource==null){
+            StringBuffer knownVersions = new StringBuffer();
+            for(String v : EmbeddedJshintCode.EMBEDDED_VERSIONS.keySet()){
+                knownVersions.append("\n    " + v);
+            }
+            throw new MojoFailureException("I don't know about the \"" + version + "\" version of jshint.  Here are the versions I /do/ know about: " + knownVersions);
+        }
+        return resource;
+    }
+    
+    private static File findJshintrc(File cwd) {
+        File placeToLook = cwd;
+        while(placeToLook.getParentFile()!=null){
+            File rcFile = new File(placeToLook, ".jshintrc");
+            if(rcFile.exists()){
+                return rcFile;
+            }else{
+                placeToLook = placeToLook.getParentFile();
+            }
+        }
+        
+        return null;
+    }
+	
+	private static boolean nullSafeEquals(String a, String b) {
 		if(a==null && b==null) return true;
 		else if(a==null || b==null) return false;
 		else return a.equals(b);
 	}
 
-	private Cache readCache(File path, Cache defaultCache){
+	private Cache readCache(File path, Cache.Hash hash){
 		try {
 			if(path.exists()){
-				return Util.readObject(path);
+				Cache cache = Util.readObject(path);
+		        if(EqualsBuilder.reflectionEquals(cache.hash, hash)){
+		            return cache;
+		        }else{
+		            log.warn("Something changed ... clearing cache");
+		            return new Cache(hash);
+		        }
+		        
 			}
 		} catch (Throwable e) {
 			super.getLog().warn("I was unable to read the cache.  This may be because of an upgrade to the plugin.");
 		}
 		
-		return defaultCache;
+		return new Cache(hash);
 	}
 	
 	private void collect(File directory, List<File> files) {
@@ -266,10 +327,10 @@ public class Mojo extends AbstractMojo {
 	 *
 	 * @throws MojoExecutionException if the specified file cannot be processed
 	 */
-	private void processConfigFile() throws MojoExecutionException {
+	private static Config processConfigFile(File configFile) throws MojoExecutionException {
 		byte[] configFileContents;
 		try {
-			configFileContents = FileUtils.readFileToByteArray(new File(configFile));
+			configFileContents = FileUtils.readFileToByteArray(configFile);
 		} catch (IOException e) {
 			throw new MojoExecutionException("Unable to read config file located in " + configFile);
 		}
@@ -277,12 +338,20 @@ public class Mojo extends AbstractMojo {
 		Set<String> globalsSet = OptionsParser.extractGlobals(configFileContents);
 		Set<String> optionsSet = OptionsParser.extractOptions(configFileContents);
 
+		final String globals, options;
+		
 		if (globalsSet.size() > 0) {
-			this.globals = StringUtils.join(globalsSet.iterator(), ",");
+			globals = StringUtils.join(globalsSet.iterator(), ",");
+		}else{
+		    globals = "";
 		}
 
 		if (optionsSet.size() > 0) {
-			this.options = StringUtils.join(optionsSet.iterator(), ",");
+			options = StringUtils.join(optionsSet.iterator(), ",");
+		}else{
+		    options = "";
 		}
+		
+		return new Config(options, globals);
 	}
 }

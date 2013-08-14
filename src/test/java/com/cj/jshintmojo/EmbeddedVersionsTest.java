@@ -2,21 +2,66 @@ package com.cj.jshintmojo;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
 
+import com.cj.jshintmojo.jshint.EmbeddedJshintCode;
 import com.cj.jshintmojo.jshint.JSHint;
 import com.cj.jshintmojo.jshint.JSHint.Error;
 
-public abstract class AbstractJSHintTest {
-    private final String jshintVersion;
-    
-    public AbstractJSHintTest(String jshintVersion) {
-        super();
-        this.jshintVersion = jshintVersion;
+@RunWith(Parameterized.class)
+public class EmbeddedVersionsTest {
+    public static class OutputMessagesVariant {
+        protected String expectedEvalIsEvilMessage(){
+            return "eval can be harmful.";
+        }
+
+        protected String expectedErrorMessageForTwoTooManyParameters(){
+            return "This function has too many parameters. (2)";
+        }
     }
+
+    @Parameters(name = "Test for compatiblity with jshint version {0}")
+    public static Collection<Object[]> data() {
+        List<Object[]> params = new ArrayList<Object[]>();
+        for(String version : EmbeddedJshintCode.EMBEDDED_VERSIONS.keySet()){
+            params.add(new Object[]{version});
+        }
+        return params;
+    }
+
+    private final String jshintVersion;
+    private final OutputMessagesVariant variants;
+
+    public EmbeddedVersionsTest(String jshintVersion) {
+        super();
+        this.jshintVersion = EmbeddedJshintCode.EMBEDDED_VERSIONS.get(jshintVersion);
+
+        if(jshintVersion.equals("r12")){
+            variants = new OutputMessagesVariant(){
+                @Override
+                protected String expectedErrorMessageForTwoTooManyParameters() {
+                    return "Too many parameters per function (2).";
+                }
+
+                @Override
+                protected String expectedEvalIsEvilMessage() {
+                    return "eval is evil.";
+                }
+            };
+        }else{
+            variants = new OutputMessagesVariant();
+        }
+    }
+
+
 
     @Test
     public void booleanOptionsCanBeFalse(){
@@ -32,13 +77,11 @@ public abstract class AbstractJSHintTest {
         // then
         Assert.assertNotNull(errors);
         Assert.assertEquals(1, errors.size());
-        Assert.assertEquals(expectedEvalIsEvilMessage(), errors.get(0).reason);
+        Assert.assertEquals(variants.expectedEvalIsEvilMessage(), errors.get(0).reason);
     }
-    
-    protected String expectedEvalIsEvilMessage(){
-        return "eval can be harmful.";
-    }
-    
+
+
+
     @Test
     public void booleanOptionsCanBeTrue(){
         // given
@@ -86,11 +129,7 @@ public abstract class AbstractJSHintTest {
         // then
         Assert.assertNotNull(errors);
         Assert.assertEquals(1, errors.size());
-        Assert.assertEquals(expectedErrorMessageForTwoTooManyParameters(), errors.get(0).reason);
-    }
-    
-    protected String expectedErrorMessageForTwoTooManyParameters(){
-        return "This function has too many parameters. (2)";
+        Assert.assertEquals(variants.expectedErrorMessageForTwoTooManyParameters(), errors.get(0).reason);
     }
 
     @Test
