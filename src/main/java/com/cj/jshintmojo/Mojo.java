@@ -1,11 +1,15 @@
 package com.cj.jshintmojo;
 
-import static com.cj.jshintmojo.util.Util.mkdirs;
+import static com.cj.jshintmojo.util.Util.*;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -27,6 +31,9 @@ import com.cj.jshintmojo.jshint.FunctionalJava;
 import com.cj.jshintmojo.jshint.FunctionalJava.Fn;
 import com.cj.jshintmojo.jshint.JSHint;
 import com.cj.jshintmojo.jshint.JSHint.Error;
+import com.cj.jshintmojo.reporter.CheckStyleReporter;
+import com.cj.jshintmojo.reporter.JSHintReporter;
+import com.cj.jshintmojo.reporter.JSLintReporter;
 import com.cj.jshintmojo.util.OptionsParser;
 import com.cj.jshintmojo.util.Util;
 
@@ -62,6 +69,15 @@ public class Mojo extends AbstractMojo {
 	 */
 	private String configFile = "";
 
+	/**
+	 * @parameter property="reporter"
+	 */
+	private String reporter = "";
+
+	/**
+	 * @parameter property="reportFile"
+	 */
+	private String reportFile = "";
 
     /**
      * @parameter expression="${jshint.version}"
@@ -82,7 +98,7 @@ public class Mojo extends AbstractMojo {
 	
 	public Mojo() {}
 	
-	public Mojo(String options, String globals, File basedir, List<String> directories, List<String> excludes, boolean failOnError, String configFile) {
+	public Mojo(String options, String globals, File basedir, List<String> directories, List<String> excludes, boolean failOnError, String configFile, String reporter, String reportFile) {
 		super();
 		this.options = options;
 		this.globals = globals;
@@ -91,6 +107,8 @@ public class Mojo extends AbstractMojo {
 		this.excludes.addAll(excludes);
 		this.failOnError = failOnError;
 		this.configFile = configFile;
+		this.reporter = reporter;
+		this.reportFile = reportFile;
 	}
 	
 	public void execute() throws MojoExecutionException, MojoFailureException {
@@ -119,7 +137,7 @@ public class Mojo extends AbstractMojo {
 			
 			Util.writeObject(new Cache(cacheHash, currentResults), cachePath);
 			
-            handleResults(currentResults);
+            handleResults(currentResults, this.reporter, this.reportFile);
             
 		} catch (FileNotFoundException e) {
 			throw new MojoExecutionException("Something bad happened", e);
@@ -214,7 +232,9 @@ public class Mojo extends AbstractMojo {
         return currentResults;
     }
 
-    private void handleResults(final Map<String, Result> currentResults) throws MojoExecutionException {
+    private void handleResults(final Map<String, Result> currentResults,
+            final String reporter, final String reportFile) throws MojoExecutionException
+    {
         char NEWLINE = '\n';
         StringBuilder errorRecap = new StringBuilder(NEWLINE);
         
@@ -242,6 +262,8 @@ public class Mojo extends AbstractMojo {
         }
         
         if(numProblematicFiles > 0) {
+            saveReportFile(currentResults, reporter, reportFile);
+
         	String errorMessage = "\nJSHint found problems with " + numProblematicFiles + " file";
 
         	// pluralise
@@ -256,6 +278,41 @@ public class Mojo extends AbstractMojo {
         	} else {
         		getLog().info(errorMessage);
         	}
+        }
+    }
+
+    private void saveReportFile(Map<String, Result> results, String reportType, String reportFile) {
+        JSHintReporter reporter = null;
+        if(JSLintReporter.FORMAT.equalsIgnoreCase(reportType)){
+            reporter = new JSLintReporter();
+        }else if(CheckStyleReporter.FORMAT.equalsIgnoreCase(reportType)){
+            reporter = new CheckStyleReporter();
+        }else if(StringUtils.isNotBlank(reportType)){
+            getLog().warn("Unknown reporter \"" + reportType + "\". Skip reporting.");
+            return;
+        }else{
+            return;
+        }
+        File file = StringUtils.isNotBlank(reportFile) ?
+                new File(reportFile) : new File("target/jshint.xml");
+        getLog().info(String.format("Generating \"JSHint\" report. reporter=%s, reportFile=%s.",
+                reportType, file.getAbsolutePath()));
+
+        String report = reporter.report(results);
+        Writer writer = null;
+        try{
+            writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), "utf-8"));
+            writer.write(report);
+        }catch (IOException e){
+            getLog().error(e);
+        }finally{
+            if(writer != null){
+                 try {
+                    writer.close();
+                } catch (IOException e) {
+                    getLog().error(e);
+                }
+            }
         }
     }
 

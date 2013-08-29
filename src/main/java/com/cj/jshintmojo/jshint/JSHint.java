@@ -1,19 +1,16 @@
 package com.cj.jshintmojo.jshint;
 
+import java.io.InputStream;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.commons.io.IOUtils;
 import org.mozilla.javascript.EcmaError;
 import org.mozilla.javascript.NativeArray;
 import org.mozilla.javascript.NativeObject;
 
 import com.cj.jshintmojo.util.Rhino;
-
-import java.io.InputStream;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 public class JSHint {
     
@@ -122,16 +119,21 @@ public class JSHint {
 
     @SuppressWarnings("serial")
     public static class Error implements Serializable {
-        public final String id, raw, evidence, reason;
-        public final Number line, character;
+        public String id, code, raw, evidence, reason;
+        public Number line, character;
 
         public Error(JSObject o) {
             id = o.dot("id");
+            code = o.dot("code");
             raw = o.dot("raw");
             evidence = o.dot("evidence");
             line = o.dot("line");
             character = o.dot("character");
             reason = o.dot("reason");
+        }
+
+        // NOTE: for Unit Testing purpose.
+        public Error() {
         }
     }
 }
