@@ -1,9 +1,7 @@
 package com.cj.jshintmojo;
 
-import static com.cj.jshintmojo.util.Util.deleteDirectory;
-import static com.cj.jshintmojo.util.Util.mkdirs;
-import static com.cj.jshintmojo.util.Util.tempDir;
-import static junit.framework.Assert.assertEquals;
+import static com.cj.jshintmojo.util.Util.*;
+import static junit.framework.Assert.*;
 
 import java.io.File;
 import java.util.Collections;
@@ -22,7 +20,7 @@ public class MojoTest {
 			Mojo mojo = new Mojo("", "", 
 							directory, 
 							Collections.singletonList("src/main/resources/nonexistentDirectory"), 
-							Collections.<String>emptyList(),true, null);
+							Collections.<String>emptyList(),true, null, null, null);
 			mojo.setLog(log);
 
 			// when
