@@ -162,7 +162,7 @@ public class Mojo extends AbstractMojo {
         final Config config;
         if(options==null){
             if(configFile!=null){
-                log.info("Using configuration file: " + jshintRc.getAbsolutePath());
+                log.info("Using configuration file: " + configFile.getAbsolutePath());
                 config = processConfigFile(configFile);
             }else if(jshintRc!=null){
                 log.info("Using configuration file: " + jshintRc.getAbsolutePath());
