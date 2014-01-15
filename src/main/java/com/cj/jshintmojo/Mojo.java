@@ -40,6 +40,7 @@ import com.cj.jshintmojo.util.Util;
 /**
  * @goal lint
  * @phase compile
+ * @threadSafe
  */
 public class Mojo extends AbstractMojo {
 
