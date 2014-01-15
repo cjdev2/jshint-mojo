@@ -28,7 +28,7 @@ public class MojoTest {
 
 			// then
 			assertEquals(1, log.messagesForLevel("warn").size());
-			assertEquals("You told me to find tests in src/main/resources/nonexistentDirectory, but there is nothing there (" + directory.getAbsolutePath() + "/src/main/resources/nonexistentDirectory)",
+			assertEquals("You told me to find tests in src/main/resources/nonexistentDirectory, but there is nothing there (" + directory.getAbsolutePath() + File.separator + "src" + File.separator + "main" + File.separator + "resources" + File.separator + "nonexistentDirectory)",
 								log.messagesForLevel("warn").get(0).content.toString());
 
 
