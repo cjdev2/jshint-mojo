@@ -10,6 +10,8 @@ public class Rhino {
 	private final Scriptable scope = cx.initStandardObjects();
 
 	public <T> T eval(String code){
+		// workaround for the 64k limit of rhino with enabled optimizations: set the Optimization Level to -1. See https://github.com/jshint/jshint/issues/1333
+		cx.setOptimizationLevel(-1);
 		return (T) 	cx.evaluateString(scope, code, "<cmd>", 1, null);
 	}
 	

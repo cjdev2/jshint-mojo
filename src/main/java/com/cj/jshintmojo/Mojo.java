@@ -82,7 +82,7 @@ public class Mojo extends AbstractMojo {
     /**
      * @parameter expression="${jshint.version}"
      */
-    private String version = "2.1.9";
+    private String version = "2.4.1";
 	
 	/**
 	 * @parameter 
