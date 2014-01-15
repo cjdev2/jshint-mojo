@@ -30,10 +30,20 @@ public class LogStub implements Log {
 		log(level, null, error);
 	}
 	private void log(String level, CharSequence content, Throwable error){
+		System.out.println("[" + getClass().getSimpleName() + "@" + level + "] " + content);
 		List<Message> levelMessages = messagesForLevel(level);
 		levelMessages.add(new Message(content, error));
 	}
-
+	
+	public boolean hasMessage(String level, String messageContent){
+		List<Message> levelMessages = messagesForLevel(level);
+		for(Message m : levelMessages){
+			if(m.content.toString().equals(messageContent)) return true;
+		}
+		
+		return false;
+	}
+	
 	public List<Message> messagesForLevel(String level) {
 		List<Message> levelMessages = messages.get(level);
 		if(levelMessages==null){

@@ -1,11 +1,16 @@
 package com.cj.jshintmojo;
 
 import static com.cj.jshintmojo.util.Util.*;
+import static org.apache.commons.io.FileUtils.writeStringToFile;
 import static org.junit.Assert.*;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 
 public class MojoTest {
@@ -36,5 +41,39 @@ public class MojoTest {
 			deleteDirectory(directory);
 		}
 	}
+	
+	@Test
+	public void resolvesConfigFileRelativeToMavenBasedirProperty() throws Exception {
+		File directory = tempDir();
+		try{
+			// given
+			mkdirs(directory, "src/main/resources");
+			mkdirs(directory, "foo/bar");
+			FileUtils.writeLines(new File(directory, "foo/bar/my-config-file.js"), Arrays.asList(
+					"{",
+					"  \"globals\": {", 
+					"    \"require\": false",
+					"  }",     
+					"}"
+					));
+			
+			Mojo mojo = new Mojo(null, "", 
+							directory, 
+							Collections.singletonList("src/main/resources/"), 
+							Collections.<String>emptyList(),true, "foo/bar/my-config-file.js", null, null);
+			
+			LogStub log = new LogStub();
+			mojo.setLog(log);
 
+			// when
+			mojo.execute();
+			
+			// then
+			final String properPathForConfigFile = new File(directory, "foo/bar/my-config-file.js").getAbsolutePath();
+			assertTrue(log.hasMessage("info", "Using configuration file: " + properPathForConfigFile));
+			
+		}finally{
+			deleteDirectory(directory);
+		}
+	}
 }

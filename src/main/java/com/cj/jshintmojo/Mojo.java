@@ -42,7 +42,6 @@ import com.cj.jshintmojo.util.Util;
  * @phase compile
  */
 public class Mojo extends AbstractMojo {
-    private final Log log = getLog();
 
 	/**
 	 * @parameter property="directories"
@@ -94,7 +93,7 @@ public class Mojo extends AbstractMojo {
 	 * @readonly
 	 * @required
 	 */
-	private File basedir;
+	File basedir;
 	
 	public Mojo() {}
 	
@@ -118,7 +117,7 @@ public class Mojo extends AbstractMojo {
 	    
         final JSHint jshint = new JSHint(jshintCode);
 
-        final Config config = readConfig(this.options, this.globals, this.configFile, this.basedir, log);
+        final Config config = readConfig(this.options, this.globals, this.configFile, this.basedir, getLog());
         final Cache.Hash cacheHash = new Cache.Hash(config.options, config.globals, this.version, this.configFile, this.directories, this.excludes);
 		
 		if(directories.isEmpty()){
@@ -133,7 +132,7 @@ public class Mojo extends AbstractMojo {
 			
 			final List<File> files = findFilesToCheck();
 
-			final Map<String, Result> currentResults = lintTheFiles(jshint, cache, files, config, log);
+			final Map<String, Result> currentResults = lintTheFiles(jshint, cache, files, config, getLog());
 			
 			Util.writeObject(new Cache(cacheHash, currentResults), cachePath);
 			
@@ -157,7 +156,7 @@ public class Mojo extends AbstractMojo {
 	
     private static Config readConfig(String options, String globals, String configFileParam, File basedir, Log log) throws MojoExecutionException {
         final File jshintRc = findJshintrc(basedir);
-        final File configFile = StringUtils.isNotBlank(configFileParam)?new File(configFileParam):null;
+        final File configFile = StringUtils.isNotBlank(configFileParam)?new File(basedir, configFileParam):null;
         
         final Config config;
         if(options==null){
@@ -357,7 +356,7 @@ public class Mojo extends AbstractMojo {
 		        if(EqualsBuilder.reflectionEquals(cache.hash, hash)){
 		            return cache;
 		        }else{
-		            log.warn("Something changed ... clearing cache");
+		        	getLog().warn("Something changed ... clearing cache");
 		            return new Cache(hash);
 		        }
 		        
