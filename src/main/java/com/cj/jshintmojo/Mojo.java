@@ -181,12 +181,22 @@ public class Mojo extends AbstractMojo {
         List<File> javascriptFiles = new ArrayList<File>();
 
         for(String next: directories){
-        	File path = new File(basedir, next);
-        	if(!path.exists() && !path.isDirectory()){
-        		getLog().warn("You told me to find tests in " + next + ", but there is nothing there (" + path.getAbsolutePath() + ")");
-        	}else{
-        		collect(path, javascriptFiles);
-        	}
+            File path = new File(basedir, next);
+            if(path.exists() && path.isDirectory()){
+                getLog().debug("You told me to find tests in " + next + ", which resolves to (" + path.getAbsolutePath() + ")");
+            }else{
+                File alternativePath = new File(next);
+                if(alternativePath.isAbsolute() && alternativePath.exists() && alternativePath.isDirectory()){
+                    path = alternativePath;
+                    getLog().debug("You told me to find tests in " + next + ", which resolves to (" + path.getAbsolutePath() + ")");
+                }else{
+                    getLog().warn("You told me to find tests in " + next + ", but there is nothing there (" + path.getAbsolutePath() + ")");
+                    path = null;
+                }
+            }
+            if(path != null){
+                collect(path, javascriptFiles);
+            }
         }
 
         List<File> matches = FunctionalJava.filter(javascriptFiles, new Fn<File, Boolean>(){
