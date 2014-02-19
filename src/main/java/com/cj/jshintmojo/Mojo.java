@@ -190,20 +190,51 @@ public class Mojo extends AbstractMojo {
         }
 
         List<File> matches = FunctionalJava.filter(javascriptFiles, new Fn<File, Boolean>(){
-        	public Boolean apply(File i) {
-        		for(String exclude : excludes){
-        			File e = new File(basedir, exclude);
-        			if(i.getAbsolutePath().startsWith(e.getAbsolutePath())){
-        				getLog().warn("Excluding " + i);
-        				
-        				return Boolean.FALSE;
-        			}
-        		}
+            public Boolean apply(File i) {
+                for (String exclude : excludes) {
+                    if (!stringIsGlob(exclude)) {
+                        File e = new File(basedir, exclude);
+                        if (i.getAbsolutePath().startsWith(e.getAbsolutePath())) {
+                            getLog().warn("Excluding " + i);
 
-        		return Boolean.TRUE;
-        	}
+                            return Boolean.FALSE;
+                        }
+                    } else {
+                        String path;
+                        try {
+                            path = i.getCanonicalPath();
+                        } catch (IOException ex) {
+                            getLog().debug("getCanonicalPath failed " + ex.getMessage());
+                            path = i.getAbsolutePath();
+                        }
+                        if (pathMatchesGlob(path, exclude)) {
+                            getLog().warn("Excluding " + i);
+                            return Boolean.FALSE;
+                        }
+                    }
+                }
+
+                return Boolean.TRUE;
+            }
         });
         return matches;
+    }
+
+    private static boolean stringIsGlob(final String glob) {
+        return glob.contains("*") || glob.contains("?");
+    }
+
+    private static boolean pathMatchesGlob(final String path, final String glob) {
+        String cleanPath = path
+                .replaceAll("\\\\", "/");
+        String regex = glob
+                .replaceAll("\\\\", "/")
+                .replaceAll("\\.", "\\\\.")
+                .replaceAll("\\*\\*+", "\\\\DOUBLESTAR\\\\")
+                .replaceAll("\\*", "[^/]*")
+                .replaceAll("\\\\DOUBLESTAR\\\\", ".*")
+                .replaceAll("\\?", "[^/]");
+       return cleanPath.matches(regex);
     }
 
     private static Map<String, Result> lintTheFiles(final JSHint jshint, final Cache cache, List<File> filesToCheck, final Config config, final Log log) throws FileNotFoundException {
