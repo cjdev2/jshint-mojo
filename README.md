@@ -23,7 +23,7 @@ Example configuration:
          </execution>
      </executions>
      <configuration>
-         <version>2.4.1</version>
+         <version>2.4.3</version>
          <options>maxparams:3,indent,camelcase,eqeqeq,forin,immed,latedef,noarg,noempty,nonew</options>
          <globals>require,$,yourFunkyJavascriptModule</globals>
          <configFile>src/main/resources/jshint.conf.js</configFile>
