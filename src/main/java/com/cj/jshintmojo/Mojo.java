@@ -36,6 +36,7 @@ import com.cj.jshintmojo.reporter.JSHintReporter;
 import com.cj.jshintmojo.reporter.JSLintReporter;
 import com.cj.jshintmojo.util.OptionsParser;
 import com.cj.jshintmojo.util.Util;
+import java.util.Collections;
 
 /**
  * @goal lint
@@ -79,6 +80,11 @@ public class Mojo extends AbstractMojo {
 	 */
 	private String reportFile = "";
 
+	/**
+	 * @parameter property="ignoreFile"
+	 */
+	private String ignoreFile = "";
+
     /**
      * @parameter expression="${jshint.version}"
      */
@@ -98,7 +104,7 @@ public class Mojo extends AbstractMojo {
 	
 	public Mojo() {}
 	
-	public Mojo(String options, String globals, File basedir, List<String> directories, List<String> excludes, boolean failOnError, String configFile, String reporter, String reportFile) {
+	public Mojo(String options, String globals, File basedir, List<String> directories, List<String> excludes, boolean failOnError, String configFile, String reporter, String reportFile, String ignoreFile) {
 		super();
 		this.options = options;
 		this.globals = globals;
@@ -109,6 +115,7 @@ public class Mojo extends AbstractMojo {
 		this.configFile = configFile;
 		this.reporter = reporter;
 		this.reportFile = reportFile;
+		this.ignoreFile = ignoreFile;
 	}
 	
 	public void execute() throws MojoExecutionException, MojoFailureException {
@@ -119,6 +126,9 @@ public class Mojo extends AbstractMojo {
         final JSHint jshint = new JSHint(jshintCode);
 
         final Config config = readConfig(this.options, this.globals, this.configFile, this.basedir, getLog());
+        if (this.excludes.isEmpty() || (this.ignoreFile != null && !this.ignoreFile.isEmpty())) {
+            this.excludes.addAll(readIgnore(this.ignoreFile, this.basedir, getLog()).lines);
+        }
         final Cache.Hash cacheHash = new Cache.Hash(config.options, config.globals, this.version, this.configFile, this.directories, this.excludes);
 		
 		if(directories.isEmpty()){
@@ -175,6 +185,34 @@ public class Mojo extends AbstractMojo {
         }
         
         return config;
+    }
+
+    static class Ignore {
+
+        final List<String> lines;
+
+        public Ignore(List<String> lines) {
+            this.lines = lines;
+        }
+
+    }
+
+    private static Ignore readIgnore(String ignoreFileParam, File basedir, Log log) throws MojoExecutionException {
+        final File jshintignore = findJshintignore(basedir);
+        final File ignoreFile = StringUtils.isNotBlank(ignoreFileParam) ? new File(basedir, ignoreFileParam) : null;
+
+        final Ignore ignore;
+        if (ignoreFile != null) {
+            log.info("Using ignore file: " + ignoreFile.getAbsolutePath());
+            ignore = processIgnoreFile(ignoreFile);
+        } else if (jshintignore != null) {
+            log.info("Using ignore file: " + jshintignore.getAbsolutePath());
+            ignore = processIgnoreFile(jshintignore);
+        } else {
+            ignore = new Ignore(Collections.<String>emptyList());
+        }
+
+        return ignore;
     }
 
     private List<File> findFilesToCheck() {
@@ -343,7 +381,21 @@ public class Mojo extends AbstractMojo {
         
         return null;
     }
-	
+
+    private static File findJshintignore(File cwd) {
+        File placeToLook = cwd;
+        while (placeToLook.getParentFile() != null) {
+            File ignoreFile = new File(placeToLook, ".jshintignore");
+            if (ignoreFile.exists()) {
+                return ignoreFile;
+            } else {
+                placeToLook = placeToLook.getParentFile();
+            }
+        }
+
+        return null;
+    }
+
 	private static boolean nullSafeEquals(String a, String b) {
 		if(a==null && b==null) return true;
 		else if(a==null || b==null) return false;
@@ -411,4 +463,18 @@ public class Mojo extends AbstractMojo {
 		
 		return new Config(options, globals);
 	}
+
+    /**
+     * Read contents of the specified ignore file and use the values defined
+     * there instead of the ones defined directly in pom.xml config.
+     *
+     * @throws MojoExecutionException if the specified file cannot be processed
+     */
+    private static Ignore processIgnoreFile(File ignoreFile) throws MojoExecutionException {
+        try {
+            return new Ignore(FileUtils.readLines(ignoreFile, "UTF-8"));
+        } catch (IOException e) {
+            throw new MojoExecutionException("Unable to read ignore file located in " + ignoreFile, e);
+        }
+    }
 }
