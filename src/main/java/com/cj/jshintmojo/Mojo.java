@@ -87,6 +87,11 @@ public class Mojo extends AbstractMojo {
 	 */
 	private String ignoreFile = "";
 
+	/**
+	 * @parameter property="customJSHint"
+	 */
+	private File customJSHint = null;
+
     /**
      * @parameter property="jshint.version"
      */
@@ -119,13 +124,21 @@ public class Mojo extends AbstractMojo {
 		this.reportFile = reportFile;
 		this.ignoreFile = ignoreFile;
 	}
-	
-	public void execute() throws MojoExecutionException, MojoFailureException {
-	    getLog().info("using jshint version " + version);
 
-	    final String jshintCode = getEmbeddedJshintCode(version);
-	    
-        final JSHint jshint = new JSHint(jshintCode);
+	public void execute() throws MojoExecutionException, MojoFailureException {
+        final JSHint jshint;
+        if (customJSHint == null) {
+            getLog().info("using jshint version " + version);
+            final String jshintCode = getEmbeddedJshintCode(version);
+            jshint = new JSHint(jshintCode);
+        } else {
+            getLog().info("using customJSHint " + customJSHint);
+            try {
+                jshint = new JSHint(customJSHint);
+            } catch (IOException e) {
+                throw new MojoExecutionException("Could not load customJSHint", e);
+            }
+        }
 
         final Config config = readConfig(this.options, this.globals, this.configFile, this.basedir, getLog());
         if (this.excludes.isEmpty() || (this.ignoreFile != null && !this.ignoreFile.isEmpty())) {
