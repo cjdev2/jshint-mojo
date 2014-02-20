@@ -300,8 +300,8 @@ public class Mojo extends AbstractMojo {
         	}
         }
         
+        saveReportFile(currentResults, reporter, reportFile);
         if(numProblematicFiles > 0) {
-            saveReportFile(currentResults, reporter, reportFile);
 
         	String errorMessage = "\nJSHint found problems with " + numProblematicFiles + " file";
 

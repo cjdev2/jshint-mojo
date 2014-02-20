@@ -53,6 +53,25 @@ public class MojoTest {
             }
         }
     }
+
+    @Test
+    public void savesReportEvenWhenThereAreNoProblems() throws Exception {
+        // given
+        File directory = tempDir();
+        File reportFile = new File(directory, "reportFile");
+        
+        LogStub log = new LogStub();
+        Mojo mojo = new Mojo("", "", 
+                directory, 
+                Collections.singletonList(""), 
+                Collections.<String>emptyList(),true, null, "jslint", reportFile.getAbsolutePath(), null);
+        mojo.setLog(log);
+        // when
+        mojo.execute();
+        // then
+        assertTrue("Saves report", log.hasMessage("info", 
+                "Generating \"JSHint\" report. reporter=jslint, reportFile="+reportFile.getAbsolutePath()+"."));
+    }
     
 	@Test
 	public void warnsUsersWhenConfiguredToWorkWithNonexistentDirectories() throws Exception {
