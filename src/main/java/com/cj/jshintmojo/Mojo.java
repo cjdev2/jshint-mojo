@@ -18,6 +18,7 @@ import java.util.Set;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.maven.model.FileSet;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -27,8 +28,6 @@ import org.codehaus.plexus.util.StringUtils;
 import com.cj.jshintmojo.cache.Cache;
 import com.cj.jshintmojo.cache.Result;
 import com.cj.jshintmojo.jshint.EmbeddedJshintCode;
-import com.cj.jshintmojo.jshint.FunctionalJava;
-import com.cj.jshintmojo.jshint.FunctionalJava.Fn;
 import com.cj.jshintmojo.jshint.JSHint;
 import com.cj.jshintmojo.jshint.JSHint.Error;
 import com.cj.jshintmojo.reporter.CheckStyleReporter;
@@ -185,25 +184,14 @@ public class Mojo extends AbstractMojo {
         	if(!path.exists() && !path.isDirectory()){
         		getLog().warn("You told me to find tests in " + next + ", but there is nothing there (" + path.getAbsolutePath() + ")");
         	}else{
-        		collect(path, javascriptFiles);
+                FileSet fs = new FileSet();
+                fs.setDirectory(path.getAbsolutePath());
+                fs.addInclude("**/*.js");
+                fs.setExcludes(excludes);
+                javascriptFiles.addAll(toFileList(fs));
         	}
         }
-
-        List<File> matches = FunctionalJava.filter(javascriptFiles, new Fn<File, Boolean>(){
-        	public Boolean apply(File i) {
-        		for(String exclude : excludes){
-        			File e = new File(basedir, exclude);
-        			if(i.getAbsolutePath().startsWith(e.getAbsolutePath())){
-        				getLog().warn("Excluding " + i);
-        				
-        				return Boolean.FALSE;
-        			}
-        		}
-
-        		return Boolean.TRUE;
-        	}
-        });
-        return matches;
+        return javascriptFiles;
     }
 
     private static Map<String, Result> lintTheFiles(final JSHint jshint, final Cache cache, List<File> filesToCheck, final Config config, final Log log) throws FileNotFoundException {
@@ -367,16 +355,6 @@ public class Mojo extends AbstractMojo {
 		}
 		
 		return new Cache(hash);
-	}
-	
-	private void collect(File directory, List<File> files) {
-		for(File next : directory.listFiles()){
-			if(next.isDirectory()){
-				collect(next, files);
-			}else if(next.getName().endsWith(".js")){
-				files.add(next);
-			}
-		}
 	}
 
 	/**

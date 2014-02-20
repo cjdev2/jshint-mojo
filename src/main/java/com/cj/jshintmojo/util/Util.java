@@ -6,8 +6,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.List;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.maven.model.FileSet;
 
 public class Util {
 
@@ -72,5 +74,28 @@ public class Util {
 			throw new RuntimeException("Could not create directory: " + path.getAbsolutePath());
 		}
 	}
-	
+
+    public static List<File> toFileList(final FileSet fileSet) {
+        File directory = new File(fileSet.getDirectory());
+        String includes = toCommaSeparated(fileSet.getIncludes());
+        String excludes = toCommaSeparated(fileSet.getExcludes());
+        try {
+            return org.codehaus.plexus.util.FileUtils.getFiles(
+                    directory, includes, excludes);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static String toCommaSeparated(final List<String> strings) {
+        StringBuilder sb = new StringBuilder();
+        for (String s : strings) {
+            sb.append(s).append(',');
+        }
+        if (sb.length() > 0) {
+            sb.setLength(sb.length() - 1);
+        }
+        return sb.toString();
+    }
+
 }
