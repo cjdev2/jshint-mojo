@@ -25,7 +25,7 @@ public class MojoTest {
 			Mojo mojo = new Mojo("", "", 
 							directory, 
 							Collections.singletonList("src/main/resources/nonexistentDirectory"), 
-							Collections.<String>emptyList(),true, null, null, null);
+							Collections.<String>emptyList(),true, null, null, null, null);
 			mojo.setLog(log);
 
 			// when
@@ -60,7 +60,7 @@ public class MojoTest {
 			Mojo mojo = new Mojo(null, "", 
 							directory, 
 							Collections.singletonList("src/main/resources/"), 
-							Collections.<String>emptyList(),true, "foo/bar/my-config-file.js", null, null);
+							Collections.<String>emptyList(),true, "foo/bar/my-config-file.js", null, null, null);
 			
 			LogStub log = new LogStub();
 			mojo.setLog(log);
