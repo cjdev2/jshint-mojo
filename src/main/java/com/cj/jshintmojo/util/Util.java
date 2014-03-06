@@ -62,9 +62,10 @@ public class Util {
 		if(!path.delete()) throw new RuntimeException("Could not delete " + path.getAbsolutePath());
 	}
 
-	public static void mkdirs(File directory, String string) {
+	public static File mkdirs(File directory, String string) {
 		File path = new File(directory, string);
 		mkdirs(path);
+		return path;
 	}
 
 	public static void mkdirs(File path) {

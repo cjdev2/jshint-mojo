@@ -233,7 +233,6 @@ public class Mojo extends AbstractMojo {
         			File e = new File(basedir, exclude);
         			if(i.getAbsolutePath().startsWith(e.getAbsolutePath())){
         				getLog().warn("Excluding " + i);
-        				
         				return Boolean.FALSE;
         			}
         		}

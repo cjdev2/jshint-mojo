@@ -15,6 +15,45 @@ import org.junit.Test;
 
 public class MojoTest {
 
+    
+
+    @Test
+    public void walksTheDirectoryTreeToFindAndUseJshintFiles() throws Exception {
+        String[] jshintIgnorePaths = {".jshintignore", "foo/.jshintignore", "foo/bar/.jshintignore", "foo/bar/baz/.jshintignore"};
+        
+        for(String jshintIgnorePath: jshintIgnorePaths){
+            File directory = tempDir();
+            try{
+                // given
+                File ignoreFile = new File(directory, jshintIgnorePath);
+                FileUtils.writeStringToFile(ignoreFile, "src/main/resources/foo.qunit.js");
+                
+                File projectDirectory = mkdirs(directory, "foo/bar/baz");
+                File resourcesDirectory = mkdirs(projectDirectory, "src/main/resources");
+                
+                File fileToIgnore = new File(resourcesDirectory, "foo.qunit.js");
+                FileUtils.writeStringToFile(fileToIgnore, "whatever, this should be ignored");
+                
+                LogStub log = new LogStub();
+                Mojo mojo = new Mojo("", "", 
+                        projectDirectory, 
+                        Collections.singletonList("src/main/resources"), 
+                        Collections.<String>emptyList(),true, null, null, null, null);
+                mojo.setLog(log);
+                
+                // when
+                mojo.execute();
+                
+                // then
+                assertTrue("Sees ignore files", log.hasMessage("info", "Using ignore file: " + ignoreFile.getAbsolutePath()));
+                assertTrue("Uses ignore files", log.hasMessage("warn", "Excluding " + fileToIgnore.getAbsolutePath()));
+                
+            }finally{
+                deleteDirectory(directory);
+            }
+        }
+    }
+    
 	@Test
 	public void warnsUsersWhenConfiguredToWorkWithNonexistentDirectories() throws Exception {
 		File directory = tempDir();

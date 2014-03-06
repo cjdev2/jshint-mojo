@@ -38,7 +38,8 @@ public class LogStub implements Log {
 	public boolean hasMessage(String level, String messageContent){
 		List<Message> levelMessages = messagesForLevel(level);
 		for(Message m : levelMessages){
-			if(m.content.toString().equals(messageContent)) return true;
+		    final String content = m.content.toString();
+		    if(content.equals(messageContent)) return true;
 		}
 		
 		return false;
