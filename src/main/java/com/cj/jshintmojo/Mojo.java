@@ -1,6 +1,30 @@
 package com.cj.jshintmojo;
 
-import static com.cj.jshintmojo.util.Util.*;
+import com.cj.jshintmojo.cache.Cache;
+import com.cj.jshintmojo.cache.Result;
+import com.cj.jshintmojo.jshint.EmbeddedJshintCode;
+import com.cj.jshintmojo.jshint.FunctionalJava;
+import com.cj.jshintmojo.jshint.FunctionalJava.Fn;
+import com.cj.jshintmojo.jshint.JSHint;
+import com.cj.jshintmojo.jshint.JSHint.Error;
+import com.cj.jshintmojo.reporter.CheckStyleReporter;
+import com.cj.jshintmojo.reporter.JSHintReporter;
+import com.cj.jshintmojo.reporter.JSLintReporter;
+import com.cj.jshintmojo.util.OptionsParser;
+import com.cj.jshintmojo.util.Util;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.maven.plugin.AbstractMojo;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugin.logging.Log;
+import org.apache.maven.project.MavenProject;
+import org.codehaus.plexus.resource.ResourceManager;
+import org.codehaus.plexus.resource.loader.FileResourceCreationException;
+import org.codehaus.plexus.resource.loader.FileResourceLoader;
+import org.codehaus.plexus.resource.loader.ResourceNotFoundException;
+import org.codehaus.plexus.util.StringUtils;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -16,26 +40,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.maven.plugin.AbstractMojo;
-import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.MojoFailureException;
-import org.apache.maven.plugin.logging.Log;
-import org.codehaus.plexus.util.StringUtils;
-
-import com.cj.jshintmojo.cache.Cache;
-import com.cj.jshintmojo.cache.Result;
-import com.cj.jshintmojo.jshint.EmbeddedJshintCode;
-import com.cj.jshintmojo.jshint.FunctionalJava;
-import com.cj.jshintmojo.jshint.FunctionalJava.Fn;
-import com.cj.jshintmojo.jshint.JSHint;
-import com.cj.jshintmojo.jshint.JSHint.Error;
-import com.cj.jshintmojo.reporter.CheckStyleReporter;
-import com.cj.jshintmojo.reporter.JSHintReporter;
-import com.cj.jshintmojo.reporter.JSLintReporter;
-import com.cj.jshintmojo.util.OptionsParser;
-import com.cj.jshintmojo.util.Util;
+import static com.cj.jshintmojo.util.Util.mkdirs;
 
 /**
  * @goal lint
@@ -95,6 +100,22 @@ public class Mojo extends AbstractMojo {
 	 * @required
 	 */
 	File basedir;
+
+	/**
+      * <i>Maven Internal</i>: Project to interact with.
+      *
+      * @parameter expression="${project}"
+      * @required
+      * @readonly
+      */
+ 	private MavenProject project;
+
+	/**
+	 * @component
+	 * @required
+	 * @readonly
+	 */
+	private ResourceManager resourceManager;
 	
 	public Mojo() {}
 	
@@ -113,6 +134,11 @@ public class Mojo extends AbstractMojo {
 	
 	public void execute() throws MojoExecutionException, MojoFailureException {
 	    getLog().info("using jshint version " + version);
+
+		//configure ResourceManager
+        resourceManager.addSearchPath(FileResourceLoader.ID, project.getFile().getParentFile().getAbsolutePath());
+        resourceManager.addSearchPath("url", "");
+        resourceManager.setOutputDirectory(new File(project.getBuild().getDirectory()));
 
 	    final String jshintCode = getEmbeddedJshintCode(version);
 	    
@@ -154,12 +180,19 @@ public class Mojo extends AbstractMojo {
         }
 	    
 	}
-	
-    private static Config readConfig(String options, String globals, String configFileParam, File basedir, Log log) throws MojoExecutionException {
-        final File jshintRc = findJshintrc(basedir);
-        final File configFile = StringUtils.isNotBlank(configFileParam)?new File(basedir, configFileParam):null;
-        
-        final Config config;
+
+	private Config readConfig(String options, String globals, String configFileParam, File basedir, Log log) throws MojoExecutionException {
+		final File jshintRc = findJshintrc(basedir);
+		final File configFile;
+		try {
+			configFile = StringUtils.isNotBlank(configFileParam) ? resourceManager.getResourceAsFile(configFileParam) : null;
+		} catch (ResourceNotFoundException e) {
+			throw new MojoExecutionException("Cannot read options file", e);
+		} catch (FileResourceCreationException e) {
+			throw new MojoExecutionException("Cannot read options file", e);
+		}
+
+		final Config config;
         if(options==null){
             if(configFile!=null){
                 log.info("Using configuration file: " + configFile.getAbsolutePath());
