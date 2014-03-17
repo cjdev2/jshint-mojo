@@ -15,9 +15,16 @@ import com.cj.jshintmojo.util.Rhino;
 public class JSHint {
     
     private final Rhino rhino;
-    
-    public JSHint(String jshintCode) {
-        
+
+    private String encoding;
+
+    public JSHint(String jshintVersion) {
+        this(jshintVersion, System.getProperty("file.encoding"));
+    }
+
+    public JSHint(String jshintCode, String encoding) {
+        this.encoding = encoding;
+
         rhino = new Rhino();
         try {
             rhino.eval(
@@ -25,13 +32,13 @@ public class JSHint {
             		"quit=function(){};" +
             		"arguments=[];");
             
-            rhino.eval(commentOutTheShebang(resourceAsString(jshintCode)));
+            rhino.eval(commentOutTheShebang(resourceAsString(jshintCode, encoding)));
         } catch (EcmaError e) {
             throw new RuntimeException("Javascript eval error:" + e.getScriptStackTrace(), e);
         }
     }
 
-    private String commentOutTheShebang(String code) {
+	private String commentOutTheShebang(String code) {
         String minusShebang = code.startsWith("#!")?"//" + code : code;
         return minusShebang;
     }
@@ -39,7 +46,7 @@ public class JSHint {
     public List<Error> run(InputStream source, String options, String globals) {
         final List<Error> results = new ArrayList<JSHint.Error>();
 
-        String sourceAsText = toString(source);
+        String sourceAsText = toString(source, encoding);
 
         NativeObject nativeOptions = toJsObject(options);
         NativeObject nativeGlobals = toJsObject(globals);
@@ -91,16 +98,16 @@ public class JSHint {
         return nativeOptions;
     }
 
-    private static String toString(InputStream in) {
+    private static String toString(InputStream in, String encoding) {
         try {
-            return IOUtils.toString(in);
+            return IOUtils.toString(in, encoding);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    private String resourceAsString(String name) {
-        return toString(getClass().getResourceAsStream(name));
+    private String resourceAsString(String name, String encoding) {
+        return toString(getClass().getResourceAsStream(name), encoding);
     }
 
     @SuppressWarnings("unchecked") 
