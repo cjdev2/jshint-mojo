@@ -97,4 +97,13 @@
 	    </developer>
 	</developers>
         <!--   END: STUFF REQUIRED BY THE CENTRAL REPO -->
+        
+        <contributors>
+          <contributor>
+            <name>Marvin Froeder</name>
+            <email>velo.br@gmail.com</email>
+            <url>about.me/velo</url>
+          </contributor>
+        </contributors>
+        
 </project>

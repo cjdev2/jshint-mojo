@@ -7,7 +7,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.ArrayList;
@@ -36,6 +38,7 @@ import com.cj.jshintmojo.reporter.JSHintReporter;
 import com.cj.jshintmojo.reporter.JSLintReporter;
 import com.cj.jshintmojo.util.OptionsParser;
 import com.cj.jshintmojo.util.Util;
+
 import java.util.Collections;
 
 /**
@@ -96,6 +99,11 @@ public class Mojo extends AbstractMojo {
 	private Boolean failOnError = true;
 
 	/**
+	 * @parameter default-value="${project.build.sourceEncoding}" 
+	 */
+	private String encoding;
+
+	/**
 	 * @parameter default-value="${basedir}
 	 * @readonly
 	 * @required
@@ -123,7 +131,7 @@ public class Mojo extends AbstractMojo {
 
 	    final String jshintCode = getEmbeddedJshintCode(version);
 	    
-        final JSHint jshint = new JSHint(jshintCode);
+        final JSHint jshint = new JSHint(jshintCode, encoding);
 
         final Config config = readConfig(this.options, this.globals, this.configFile, this.basedir, getLog());
         if (this.excludes.isEmpty() || (this.ignoreFile != null && !this.ignoreFile.isEmpty())) {
@@ -243,14 +251,14 @@ public class Mojo extends AbstractMojo {
         return matches;
     }
 
-    private static Map<String, Result> lintTheFiles(final JSHint jshint, final Cache cache, List<File> filesToCheck, final Config config, final Log log) throws FileNotFoundException {
+    private static Map<String, Result> lintTheFiles(final JSHint jshint, final Cache cache, List<File> filesToCheck, final Config config, final Log log ) throws FileNotFoundException {
         final Map<String, Result> currentResults = new HashMap<String, Result>();
         for(File file : filesToCheck){
         	Result previousResult = cache.previousResults.get(file.getAbsolutePath());
         	Result theResult;
         	if(previousResult==null || (previousResult.lastModified.longValue()!=file.lastModified())){
         		log.info("  " + file );
-        		List<Error> errors = jshint.run(new FileInputStream(file), config.options, config.globals);
+				List<Error> errors = jshint.run(new FileInputStream(file), config.options, config.globals );
         		theResult = new Result(file.getAbsolutePath(), file.lastModified(), errors); 
         	}else{
         		log.info("  " + file + " [no change]");
