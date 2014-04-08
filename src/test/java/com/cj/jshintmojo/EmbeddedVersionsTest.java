@@ -14,7 +14,7 @@ import org.junit.runners.Parameterized.Parameters;
 
 import com.cj.jshintmojo.jshint.EmbeddedJshintCode;
 import com.cj.jshintmojo.jshint.JSHint;
-import com.cj.jshintmojo.jshint.JSHint.Error;
+import com.cj.jshintmojo.jshint.JSHint.Hint;
 
 @RunWith(Parameterized.class)
 public class EmbeddedVersionsTest {
@@ -40,7 +40,7 @@ public class EmbeddedVersionsTest {
     private final String jshintVersion;
     private final OutputMessagesVariant variants;
 
-    public EmbeddedVersionsTest(String jshintVersion) {
+    public EmbeddedVersionsTest(final String jshintVersion) {
         super();
         this.jshintVersion = EmbeddedJshintCode.EMBEDDED_VERSIONS.get(jshintVersion);
 
@@ -72,12 +72,12 @@ public class EmbeddedVersionsTest {
         final JSHint jsHint = new JSHint(jshintVersion);
 
         // when
-        List<JSHint.Error> errors = jsHint.run(code, options, globals);
+        List<Hint> hints = jsHint.run(code, options, globals);
 
         // then
-        Assert.assertNotNull(errors);
-        Assert.assertEquals(1, errors.size());
-        Assert.assertEquals(variants.expectedEvalIsEvilMessage(), errors.get(0).reason);
+        Assert.assertNotNull(hints);
+        Assert.assertEquals(1, hints.size());
+        Assert.assertEquals(variants.expectedEvalIsEvilMessage(), hints.get(0).reason);
     }
 
 
@@ -91,11 +91,11 @@ public class EmbeddedVersionsTest {
         final JSHint jsHint = new JSHint(jshintVersion);
 
         // when
-        List<JSHint.Error> errors = jsHint.run(code, options, globals);
+        List<Hint> hints = jsHint.run(code, options, globals);
 
         // then
-        Assert.assertNotNull(errors);
-        Assert.assertEquals(0, errors.size());
+        Assert.assertNotNull(hints);
+        Assert.assertEquals(0, hints.size());
     }
 
     @Test
@@ -107,12 +107,12 @@ public class EmbeddedVersionsTest {
         final JSHint jsHint = new JSHint(jshintVersion);
 
         // when
-        List<JSHint.Error> errors = jsHint.run(code, options, globals);
+        List<Hint> hints = jsHint.run(code, options, globals);
 
         // then
-        Assert.assertNotNull(errors);
-        Assert.assertEquals(1, errors.size());
-        Assert.assertEquals("Expected 'alert' to have an indentation at 1 instead at 2.", errors.get(0).reason);
+        Assert.assertNotNull(hints);
+        Assert.assertEquals(1, hints.size());
+        Assert.assertEquals("Expected 'alert' to have an indentation at 1 instead at 2.", hints.get(0).reason);
     }
 
     @Test
@@ -124,12 +124,12 @@ public class EmbeddedVersionsTest {
         final JSHint jsHint = new JSHint(jshintVersion);
 
         // when
-        List<JSHint.Error> errors = jsHint.run(code, options, globals);
+        List<Hint> hints = jsHint.run(code, options, globals);
 
         // then
-        Assert.assertNotNull(errors);
-        Assert.assertEquals(1, errors.size());
-        Assert.assertEquals(variants.expectedErrorMessageForTwoTooManyParameters(), errors.get(0).reason);
+        Assert.assertNotNull(hints);
+        Assert.assertEquals(1, hints.size());
+        Assert.assertEquals(variants.expectedErrorMessageForTwoTooManyParameters(), hints.get(0).reason);
     }
 
     @Test
@@ -141,12 +141,12 @@ public class EmbeddedVersionsTest {
         final JSHint jsHint = new JSHint(jshintVersion);
 
         // when
-        List<JSHint.Error> errors = jsHint.run(code, options, globals);
+        List<Hint> hints = jsHint.run(code, options, globals);
 
         // then
-        Assert.assertNotNull(errors);
-        Assert.assertEquals(1, errors.size());
-        Assert.assertEquals("Do not use 'new' for side effects.", errors.get(0).raw);
+        Assert.assertNotNull(hints);
+        Assert.assertEquals(1, hints.size());
+        Assert.assertEquals("Do not use 'new' for side effects.", hints.get(0).raw);
     }
 
     @Test
@@ -158,21 +158,21 @@ public class EmbeddedVersionsTest {
         final JSHint jsHint = new JSHint(jshintVersion);
 
         // when
-        List<JSHint.Error> errors = jsHint.run(code, options, globals);
+        List<Hint> hints = jsHint.run(code, options, globals);
 
         // then
-        Assert.assertNotNull(errors);
-        Assert.assertEquals("Expected no errors, but received:\n " + toString(errors), 0, errors.size());
+        Assert.assertNotNull(hints);
+        Assert.assertEquals("Expected no hints, but received:\n " + toString(hints), 0, hints.size());
     }
 
-    private static InputStream toStream(String text){
+    private static InputStream toStream(final String text){
         return new ByteArrayInputStream(text.getBytes());
     }
 
-    private static String toString(List<Error> errors) {
+    private static String toString(final List<Hint> hints) {
         StringBuffer text = new StringBuffer();
-        for(Error error: errors){
-            text.append(error.reason + "\n");
+        for(Hint hint: hints){
+            text.append(hint.reason + "\n");
         }
         return text.toString();
     }

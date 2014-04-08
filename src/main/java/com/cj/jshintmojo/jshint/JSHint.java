@@ -9,35 +9,36 @@ import org.apache.commons.io.IOUtils;
 import org.mozilla.javascript.EcmaError;
 import org.mozilla.javascript.NativeArray;
 import org.mozilla.javascript.NativeObject;
+import org.mozilla.javascript.ScriptableObject;
 
 import com.cj.jshintmojo.util.Rhino;
 
 public class JSHint {
-    
+
     private final Rhino rhino;
-    
-    public JSHint(String jshintCode) {
-        
+
+    public JSHint(final String jshintCode) {
+
         rhino = new Rhino();
         try {
             rhino.eval(
             		"print=function(){};" +
             		"quit=function(){};" +
             		"arguments=[];");
-            
+
             rhino.eval(commentOutTheShebang(resourceAsString(jshintCode)));
         } catch (EcmaError e) {
             throw new RuntimeException("Javascript eval error:" + e.getScriptStackTrace(), e);
         }
     }
 
-    private String commentOutTheShebang(String code) {
+    private String commentOutTheShebang(final String code) {
         String minusShebang = code.startsWith("#!")?"//" + code : code;
         return minusShebang;
     }
 
-    public List<Error> run(InputStream source, String options, String globals) {
-        final List<Error> results = new ArrayList<JSHint.Error>();
+    public List<Hint> run(final InputStream source, final String options, final String globals) {
+        final List<Hint> results = new ArrayList<JSHint.Hint>();
 
         String sourceAsText = toString(source);
 
@@ -60,7 +61,7 @@ public class JSHint {
         return results;
     }
 
-    private NativeObject toJsObject(String options) {
+    private NativeObject toJsObject(final String options) {
         NativeObject nativeOptions = new NativeObject();
         for (final String nextOption : options.split(",")) {
             final String option = nextOption.trim();
@@ -82,16 +83,16 @@ public class JSHint {
                     } else if (rest.equals("false")) {
                         value = Boolean.FALSE;
                     } else {
-                        value = rest;		        
+                        value = rest;
                     }
                 }
-                nativeOptions.defineProperty(name, value, NativeObject.READONLY);
+                nativeOptions.defineProperty(name, value, ScriptableObject.READONLY);
             }
         }
         return nativeOptions;
     }
 
-    private static String toString(InputStream in) {
+    private static String toString(final InputStream in) {
         try {
             return IOUtils.toString(in);
         } catch (Exception e) {
@@ -99,30 +100,31 @@ public class JSHint {
         }
     }
 
-    private String resourceAsString(String name) {
+    private String resourceAsString(final String name) {
         return toString(getClass().getResourceAsStream(name));
     }
 
-    @SuppressWarnings("unchecked") 
+    @SuppressWarnings("unchecked")
     static class JSObject {
-        private NativeObject a;
+        private final NativeObject a;
 
-        public JSObject(Object o) {
-            if(o==null) throw new NullPointerException();
+        public JSObject(final Object o) {
+            if(o==null) {
+                throw new NullPointerException();
+            }
             this.a = (NativeObject)o;
         }
 
-        public <T> T dot(String name){
+        public <T> T dot(final String name){
             return (T) a.get(name);
         }
     }
 
-    @SuppressWarnings("serial")
-    public static class Error implements Serializable {
+    public static abstract class Hint {
         public String id, code, raw, evidence, reason;
         public Number line, character;
 
-        public Error(JSObject o) {
+        public Hint(final JSObject o) {
             id = o.dot("id");
             code = o.dot("code");
             raw = o.dot("raw");
@@ -132,8 +134,29 @@ public class JSHint {
             reason = o.dot("reason");
         }
 
-        // NOTE: for Unit Testing purpose.
-        public Error() {
+        public Hint() { }
+
+    }
+
+    @SuppressWarnings("serial")
+    public static class Warning extends Hint implements Serializable {
+
+        public Warning(final JSObject o) {
+            super(o);
         }
+
+        // NOTE: for Unit Testing purpose.
+        public Warning() { }
+    }
+
+    @SuppressWarnings("serial")
+    public static class Error extends Hint implements Serializable {
+
+        public Error(final JSObject o) {
+            super(o);
+        }
+
+        // NOTE: for Unit Testing purpose.
+        public Error() { }
     }
 }

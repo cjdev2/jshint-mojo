@@ -6,7 +6,7 @@ import java.util.Map;
 import org.apache.commons.lang.StringUtils;
 
 import com.cj.jshintmojo.cache.Result;
-import com.cj.jshintmojo.jshint.JSHint;
+import com.cj.jshintmojo.jshint.JSHint.Hint;
 
 /**
  * JSLint style xml reporter class.
@@ -19,7 +19,7 @@ public class JSLintReporter implements JSHintReporter {
     public static final String FORMAT = "jslint";
 
     @Override
-    public String report(Map<String, Result> results) {
+    public String report(final Map<String, Result> results) {
         if(results == null){
             return "";
         }
@@ -31,11 +31,11 @@ public class JSLintReporter implements JSHintReporter {
         for(String file : files){
             Result result = results.get(file);
             buf.append("\t<file name=\"" + result.path + "\">\n");
-            for(JSHint.Error issue : result.errors){
+            for(Hint hint : result.hints){
                 buf.append(String.format("\t\t<issue line=\"%d\" char=\"%d\" reason=\"%s\" evidence=\"%s\" ",
-                        issue.line.intValue(), issue.character.intValue(), encode(issue.reason), encode(issue.evidence)));
-                if(StringUtils.isNotEmpty(issue.code)){
-                    buf.append("severity=\"" + issue.code.charAt(0) + "\" ");
+                        hint.line.intValue(), hint.character.intValue(), encode(hint.reason), encode(hint.evidence)));
+                if(StringUtils.isNotEmpty(hint.code)){
+                    buf.append("severity=\"" + hint.code.charAt(0) + "\" ");
                 }
                 buf.append("/>\n");
             }
@@ -45,8 +45,8 @@ public class JSLintReporter implements JSHintReporter {
 
         return buf.toString();
     }
-    
-    private String encode(String str) {
+
+    private String encode(final String str) {
         if(str == null){
             return "";
         }
