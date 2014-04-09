@@ -52,8 +52,12 @@ public class JSHint {
 
             for(Object next : errors){
                 if(next!=null){ // sometimes it seems that the last error in the list is null
-                    Error error = new Error(new JSObject(next));
-                    results.add(error);
+                    JSObject jso = new JSObject(next);
+                    if (jso.dot("id").toString().equals("(error)")) {
+                        results.add(new Error(jso));
+                    } else if (jso.toString().startsWith("(warning)")) {
+                        results.add(new Warning(jso));
+                    }
                 }
             }
         }
