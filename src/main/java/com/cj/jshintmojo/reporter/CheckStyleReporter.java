@@ -6,6 +6,7 @@ import java.util.Map;
 import org.apache.commons.lang.StringUtils;
 
 import com.cj.jshintmojo.cache.Result;
+import com.cj.jshintmojo.jshint.JSHint;
 import com.cj.jshintmojo.jshint.JSHint.Hint;
 
 /**
@@ -32,8 +33,8 @@ public class CheckStyleReporter implements JSHintReporter {
             Result result = results.get(file);
             buf.append("\t<file name=\"" + result.path + "\">\n");
             for (Hint hint : result.hints) {
-                buf.append(String.format("\t\t<error line=\"%d\" column=\"%d\" message=\"%s\" source=\"jshint.%s\" severity=\"%s\" />\n",
-                        hint.line.intValue(), hint.character.intValue(), encode(hint.reason), encode(hint.code), severity(hint.code)));
+        		buf.append(String.format("\t\t<" + severity(hint.code) + " line=\"%d\" column=\"%d\" message=\"%s\" source=\"jshint.%s\" severity=\"%s\" />\n",
+        				hint.line.intValue(), hint.character.intValue(), encode(hint.reason), encode(hint.code), severity(hint.code)));
             }
             buf.append("\t</file>\n");
         }
@@ -50,6 +51,7 @@ public class CheckStyleReporter implements JSHintReporter {
             case 'I':
                 return "info";
             case 'W':
+            	return "warning";
             default:
                 break;
             }

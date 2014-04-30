@@ -57,6 +57,8 @@ public class JSHint {
                         results.add(new Error(jso));
                     } else if (jso.toString().startsWith("(warning)")) {
                         results.add(new Warning(jso));
+                    } else if (jso.toString().startsWith("(info)")) {
+                        results.add(new Info(jso));
                     }
                 }
             }
@@ -162,5 +164,16 @@ public class JSHint {
 
         // NOTE: for Unit Testing purpose.
         public Error() { }
+    }
+    
+    @SuppressWarnings("serial")
+    public static class Info extends Hint implements Serializable {
+
+        public Info(final JSObject o) {
+            super(o);
+        }
+
+        // NOTE: for Unit Testing purpose.
+        public Info() { }
     }
 }
