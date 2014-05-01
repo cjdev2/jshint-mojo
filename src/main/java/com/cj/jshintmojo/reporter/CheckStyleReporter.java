@@ -6,7 +6,6 @@ import java.util.Map;
 import org.apache.commons.lang.StringUtils;
 
 import com.cj.jshintmojo.cache.Result;
-import com.cj.jshintmojo.jshint.JSHint;
 import com.cj.jshintmojo.jshint.JSHint.Hint;
 
 /**
@@ -48,15 +47,13 @@ public class CheckStyleReporter implements JSHintReporter {
             switch(errorCode.charAt(0)){
             case 'E':
                 return "error";
-            case 'I':
-                return "info";
             case 'W':
             	return "warning";
-            default:
-                break;
+            case 'I':
+                return "info";
             }
         }
-        return "warning";
+        throw new IllegalArgumentException();
     }
 
     private String encode(final String str) {

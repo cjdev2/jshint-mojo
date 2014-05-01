@@ -80,41 +80,6 @@ public class MojoTest {
 		}
 	}
 
-//	@Test
-//	public void resolvesConfigFileRelativeToMavenBasedirProperty() throws Exception {
-//		File directory = tempDir();
-//		try{
-//			// given
-//			mkdirs(directory, "src/main/resources");
-//			mkdirs(directory, "foo/bar");
-//			FileUtils.writeLines(new File(directory, "foo/bar/my-config-file.js"), Arrays.asList(
-//					"{",
-//					"  \"globals\": {",
-//					"    \"require\": false",
-//					"  }",
-//					"}"
-//					));
-//
-//			Mojo mojo = new Mojo(null, "",
-//							directory,
-//							Collections.singletonList("src/main/resources/"),
-//							Collections.<String>emptyList(),true, true, "foo/bar/my-config-file.js", null, null, null);
-//
-//			LogStub log = new LogStub();
-//			mojo.setLog(log);
-//
-//			// when
-//			mojo.execute();
-//
-//			// then
-//			final String properPathForConfigFile = new File(directory, "foo/bar/my-config-file.js").getAbsolutePath();
-//			assertTrue(log.hasMessage("info", "Using configuration file: " + properPathForConfigFile));
-//
-//		}finally{
-//			deleteDirectory(directory);
-//		}
-//	}
-	
 	@Test
     public void resolvesConfigFileRelativeToMavenBasedirProperty() throws Exception {
         File directory = tempDir();
