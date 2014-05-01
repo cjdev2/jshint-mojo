@@ -31,7 +31,7 @@ public class JSLintReporter implements JSHintReporter {
         for(String file : files){
             Result result = results.get(file);
             buf.append("\t<file name=\"" + result.path + "\">\n");
-            for(Hint hint : result.hints){
+            for (Hint hint : result.hints) {
                 buf.append(String.format("\t\t<issue line=\"%d\" char=\"%d\" reason=\"%s\" evidence=\"%s\" ",
                         hint.line.intValue(), hint.character.intValue(), encode(hint.reason), encode(hint.evidence)));
                 if(StringUtils.isNotEmpty(hint.code)){

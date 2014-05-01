@@ -51,14 +51,10 @@ public class JSHint {
             NativeArray errors = rhino.eval("JSHINT.errors");
 
             for(Object next : errors){
-                if(next!=null){ // sometimes it seems that the last error in the list is null
+                if(next != null){ // sometimes it seems that the last error in the list is null
                     JSObject jso = new JSObject(next);
                     if (jso.dot("id").toString().equals("(error)")) {
-                        results.add(new Error(jso));
-                    } else if (jso.toString().startsWith("(warning)")) {
-                        results.add(new Warning(jso));
-                    } else if (jso.toString().startsWith("(info)")) {
-                        results.add(new Info(jso));
+                        results.add(Hint.createHint(jso));
                     }
                 }
             }
@@ -141,6 +137,35 @@ public class JSHint {
         }
 
         public Hint() { }
+        
+        public String printLogMessage() {
+            String line = (this.line != null) ? String.valueOf(this.line.intValue()) : "";
+            String character = (this.character != null) ? String.valueOf(this.character.intValue()) : "";
+            return "   " + line + "," + character + ": " + this.reason + " \t(" + this.code + ")";
+        }
+        
+        public static Hint createHint(final JSObject jso) {
+            if (jso == null)
+            	throw new IllegalArgumentException();
+            String code = (String)jso.dot("code");
+            
+            char c = code.charAt(0);
+            Hint hint;
+            switch (c) {
+                case 'E':
+                    hint = new Error(jso);
+                    break;
+                case 'W':
+                    hint = new Warning(jso);
+                    break;
+                case 'I':
+                    hint = new Info(jso);
+                    break;
+                default:
+                    throw new IllegalArgumentException("Unexpected char c=" + c);
+            }
+            return hint;
+        }
 
     }
 

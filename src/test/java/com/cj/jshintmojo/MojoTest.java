@@ -15,8 +15,6 @@ import org.junit.Test;
 
 public class MojoTest {
 
-
-
     @Test
     public void walksTheDirectoryTreeToFindAndUseJshintFiles() throws Exception {
         String[] jshintIgnorePaths = {".jshintignore", "foo/.jshintignore", "foo/bar/.jshintignore", "foo/bar/baz/.jshintignore"};
@@ -38,7 +36,7 @@ public class MojoTest {
                 Mojo mojo = new Mojo("", "",
                         projectDirectory,
                         Collections.singletonList("src/main/resources"),
-                        Collections.<String>emptyList(),true, null, null, null, null);
+                        Collections.<String>emptyList(), true, true, null, null, null, null);
                 mojo.setLog(log);
 
                 // when
@@ -64,7 +62,7 @@ public class MojoTest {
 			Mojo mojo = new Mojo("", "",
 							directory,
 							Collections.singletonList("src/main/resources/nonexistentDirectory"),
-							Collections.<String>emptyList(),true, null, null, null, null);
+							Collections.<String>emptyList(),true, true, null, null, null, null);
 			mojo.setLog(log);
 
 			// when
@@ -82,38 +80,108 @@ public class MojoTest {
 		}
 	}
 
+//	@Test
+//	public void resolvesConfigFileRelativeToMavenBasedirProperty() throws Exception {
+//		File directory = tempDir();
+//		try{
+//			// given
+//			mkdirs(directory, "src/main/resources");
+//			mkdirs(directory, "foo/bar");
+//			FileUtils.writeLines(new File(directory, "foo/bar/my-config-file.js"), Arrays.asList(
+//					"{",
+//					"  \"globals\": {",
+//					"    \"require\": false",
+//					"  }",
+//					"}"
+//					));
+//
+//			Mojo mojo = new Mojo(null, "",
+//							directory,
+//							Collections.singletonList("src/main/resources/"),
+//							Collections.<String>emptyList(),true, true, "foo/bar/my-config-file.js", null, null, null);
+//
+//			LogStub log = new LogStub();
+//			mojo.setLog(log);
+//
+//			// when
+//			mojo.execute();
+//
+//			// then
+//			final String properPathForConfigFile = new File(directory, "foo/bar/my-config-file.js").getAbsolutePath();
+//			assertTrue(log.hasMessage("info", "Using configuration file: " + properPathForConfigFile));
+//
+//		}finally{
+//			deleteDirectory(directory);
+//		}
+//	}
+	
 	@Test
-	public void resolvesConfigFileRelativeToMavenBasedirProperty() throws Exception {
-		File directory = tempDir();
-		try{
-			// given
-			mkdirs(directory, "src/main/resources");
-			mkdirs(directory, "foo/bar");
-			FileUtils.writeLines(new File(directory, "foo/bar/my-config-file.js"), Arrays.asList(
-					"{",
-					"  \"globals\": {",
-					"    \"require\": false",
-					"  }",
-					"}"
-					));
+    public void resolvesConfigFileRelativeToMavenBasedirProperty() throws Exception {
+        File directory = tempDir();
+        try{
+            // given
+            mkdirs(directory, "src/main/resources");
+            mkdirs(directory, "foo/bar");
+            FileUtils.writeLines(new File(directory, "foo/bar/my-config-file.js"), Arrays.asList(
+                    "{",
+                    "  \"globals\": {", 
+                    "    \"require\": false",
+                    "  }",     
+                    "}"
+                    ));
+            
+            Mojo mojo = new Mojo(null, "", 
+                            directory, 
+                            Collections.singletonList("src/main/resources/"), 
+                            Collections.<String>emptyList(), true, true, "foo/bar/my-config-file.js", null, null, null);
+            
+            LogStub log = new LogStub();
+            mojo.setLog(log);
 
-			Mojo mojo = new Mojo(null, "",
-							directory,
-							Collections.singletonList("src/main/resources/"),
-							Collections.<String>emptyList(),true, "foo/bar/my-config-file.js", null, null, null);
+            // when
+            mojo.execute();
+            
+            // then
+            final String properPathForConfigFile = new File(directory, "foo/bar/my-config-file.js").getAbsolutePath();
+            assertTrue(log.hasMessage("info", "Using configured 'configFile' from: " + properPathForConfigFile));
+            
+        }finally{
+            deleteDirectory(directory);
+        }
+    }
+    
+    @Test
+    public void resolvesConfigFileByAbsolutePath() throws Exception {
+        File directory = tempDir();
+        File baseDir = tempDir();
+        try{
+            // given
+            mkdirs(directory, "src/main/resources");
+            mkdirs(directory, "foo/bar");
+            File jshintConf = new File(directory, "foo/bar/jshint.conf.json");
+            FileUtils.writeLines(jshintConf, Arrays.asList(
+                    "{",
+                    "  \"globals\": {", 
+                    "    \"require\": false",
+                    "  }",     
+                    "}"
+                    ));
+            
+            Mojo mojo = new Mojo(null, "", 
+                    baseDir,
+                            Collections.singletonList("src/main/resources/"), 
+                            Collections.<String>emptyList(), true, true, jshintConf.getAbsolutePath(), null, null, null);
+            
+            LogStub log = new LogStub();
+            mojo.setLog(log);
 
-			LogStub log = new LogStub();
-			mojo.setLog(log);
-
-			// when
-			mojo.execute();
-
-			// then
-			final String properPathForConfigFile = new File(directory, "foo/bar/my-config-file.js").getAbsolutePath();
-			assertTrue(log.hasMessage("info", "Using configuration file: " + properPathForConfigFile));
-
-		}finally{
-			deleteDirectory(directory);
-		}
-	}
+            // when
+            mojo.execute();
+            
+            // then
+            assertTrue(log.hasMessage("info", "Using configured 'configFile' from: " + jshintConf.getAbsolutePath()));
+        }finally{
+            deleteDirectory(directory);
+        }
+    }
 }

@@ -31,9 +31,7 @@ import com.cj.jshintmojo.jshint.EmbeddedJshintCode;
 import com.cj.jshintmojo.jshint.FunctionalJava;
 import com.cj.jshintmojo.jshint.FunctionalJava.Fn;
 import com.cj.jshintmojo.jshint.JSHint;
-import com.cj.jshintmojo.jshint.JSHint.Error;
 import com.cj.jshintmojo.jshint.JSHint.Hint;
-import com.cj.jshintmojo.jshint.JSHint.Warning;
 import com.cj.jshintmojo.reporter.CheckStyleReporter;
 import com.cj.jshintmojo.reporter.JSHintReporter;
 import com.cj.jshintmojo.reporter.JSLintReporter;
@@ -96,6 +94,10 @@ public class Mojo extends AbstractMojo {
 	 * @parameter
 	 */
 	private Boolean failOnError = true;
+	/**
+     * @parameter
+     */
+    private Boolean failOnWarning = true;
 
 	/**
 	 * @parameter default-value="${basedir}
@@ -106,14 +108,17 @@ public class Mojo extends AbstractMojo {
 
 	public Mojo() {}
 
-	public Mojo(final String options, final String globals, final File basedir, final List<String> directories, final List<String> excludes, final boolean failOnError, final String configFile, final String reporter, final String reportFile, final String ignoreFile) {
+	public Mojo(final String options, final String globals, final File basedir, final List<String> directories, 
+	        final List<String> excludes, final boolean failOnError, final boolean failOnWarning, 
+	        final String configFile, final String reporter, final String reportFile, final String ignoreFile) {
 		super();
 		this.options = options;
 		this.globals = globals;
 		this.basedir = basedir;
 		this.directories.addAll(directories);
 		this.excludes.addAll(excludes);
-		this.failOnError = failOnError;
+        this.failOnError = failOnError;
+        this.failOnWarning = failOnWarning;
 		this.configFile = configFile;
 		this.reporter = reporter;
 		this.reportFile = reportFile;
@@ -169,24 +174,31 @@ public class Mojo extends AbstractMojo {
 	}
 
     private static Config readConfig(final String options, final String globals, final String configFileParam, final File basedir, final Log log) throws MojoExecutionException {
-        final File jshintRc = findJshintrc(basedir);
-        final File configFile = StringUtils.isNotBlank(configFileParam)?new File(basedir, configFileParam):null;
-
         final Config config;
-        if(options==null){
-            if(configFile!=null){
-                log.info("Using configuration file: " + configFile.getAbsolutePath());
-                config = processConfigFile(configFile);
-            }else if(jshintRc!=null){
-                log.info("Using configuration file: " + jshintRc.getAbsolutePath());
-                config = processConfigFile(jshintRc);
-            }else{
-                config = new Config("", globals);
-            }
-        }else{
+        if (options != null) {
             config = new Config(options, globals);
+        } else {
+            File configFile = null;
+            if (StringUtils.isNotBlank(configFileParam)) {
+                configFile = new File(configFileParam);
+                if (!configFile.isAbsolute()) {
+                    configFile = new File(basedir, configFileParam);
+                }
+            }
+            if (configFile != null && configFile.exists()) {
+                log.info("Using configured 'configFile' from: " + configFile.getAbsolutePath());
+                config = processConfigFile(configFile);
+            } else {
+                final File jshintRc = findJshintrc(basedir);
+                if (jshintRc != null) {
+                    log.info("No configFile configured or found, but found a '.jshintrc' file: " + jshintRc.getAbsolutePath());
+                    config = processConfigFile(jshintRc);
+                } else {
+                    log.info("No options, configFile or '.jshintrc' file found. Only using configured globals.");
+                    config = new Config("", globals);
+                }
+            }
         }
-
         return config;
     }
 
@@ -249,30 +261,33 @@ public class Mojo extends AbstractMojo {
 
     private static Map<String, Result> lintTheFiles(final JSHint jshint, final Cache cache, final List<File> filesToCheck, final Config config, final Log log) throws FileNotFoundException {
         final Map<String, Result> currentResults = new HashMap<String, Result>();
-        for(File file : filesToCheck){
-        	Result previousResult = cache.previousResults.get(file.getAbsolutePath());
-        	Result theResult;
-        	if(previousResult==null || (previousResult.lastModified.longValue()!=file.lastModified())){
-        		log.info("  " + file );
-        		List<Hint> hints = jshint.run(new FileInputStream(file), config.options, config.globals);
-        		theResult = new Result(file.getAbsolutePath(), file.lastModified(), hints);
-        	}else{
-        		log.info("  " + file + " [no change]");
-        		theResult = previousResult;
-        	}
+        for (File file : filesToCheck) {
+            Result previousResult = cache.previousResults.get(file.getAbsolutePath());
+            Result theResult;
+            if (previousResult == null || (previousResult.lastModified.longValue() != file.lastModified())) {
+                log.info("  " + file);
+                List<Hint> hints = jshint.run(new FileInputStream(file), config.options, config.globals);
+                theResult = new Result(file.getAbsolutePath(), file.lastModified(), hints);
+            } else {
+                log.info("  " + file + " [no change]");
+                theResult = previousResult;
+            }
 
-        	if(theResult!=null){
-        		currentResults.put(theResult.path, theResult);
-        		Result r = theResult;
-        		currentResults.put(r.path, r);
-        		for(Hint hint: r.hints) {
-        		    if (hint instanceof Warning) {
-                        log.warn("   " + hint.line.intValue() + "," + hint.character.intValue() + ": " + hint.reason);
-                    } else if (hint instanceof Error) {
-                        log.error("   " + hint.line.intValue() + "," + hint.character.intValue() + ": " + hint.reason);
+            if (theResult != null) {
+                currentResults.put(theResult.path, theResult);
+                Result r = theResult;
+                currentResults.put(r.path, r);
+                for (Hint hint : r.hints) {
+                    String consoleLogMessage = hint.printLogMessage();
+                    if (hint instanceof JSHint.Info) {
+                        log.info(consoleLogMessage);
+                    } else if (hint instanceof JSHint.Warning) {
+                        log.warn(consoleLogMessage);
+                    } else if (hint instanceof JSHint.Error) {
+                        log.error(consoleLogMessage);
                     }
-        		}
-        	}
+                }
+            }
         }
         return currentResults;
     }
@@ -283,23 +298,27 @@ public class Mojo extends AbstractMojo {
         StringBuilder errorRecap = new StringBuilder(NEWLINE);
 
         int numProblematicFiles = 0;
+        boolean hasErrors = false;
+        boolean hasWarnings = false;
         for(Result r : currentResults.values()){
-        	if(!r.hints.isEmpty()){
-        		numProblematicFiles ++;
+            if (!r.hints.isEmpty()) {
+                numProblematicFiles ++;
 
                 errorRecap
                     .append(NEWLINE)
                     .append(r.path)
                     .append(NEWLINE);
 
-        		for (Hint hint: r.hints) {
-        			errorRecap
-                        .append("   ")
-                        .append(hint.line.intValue())
-                        .append(",")
-                        .append(hint.character.intValue())
-                        .append(": ")
-                        .append(hint.reason)
+                for (Hint hint : r.hints) {
+                    if (hint == null) {
+                        errorRecap.append("!!!hint was null!");
+                        continue;
+                    }
+                    hasWarnings |= (hint instanceof JSHint.Warning);
+                    hasErrors |= (hint instanceof JSHint.Error);
+
+                    errorRecap
+                        .append(hint.printLogMessage())
                         .append(NEWLINE);
         		}
         	}
@@ -308,20 +327,43 @@ public class Mojo extends AbstractMojo {
         if(numProblematicFiles > 0) {
             saveReportFile(currentResults, reporter, reportFile);
 
-        	String errorMessage = "\nJSHint found problems with " + numProblematicFiles + " file";
+            String errorMessage = "\nJSHint found ";
+            
+            if (hasErrors)
+                errorMessage += "errors ";
+            if (hasErrors && hasWarnings)
+                errorMessage += "and ";
+            if (hasWarnings)
+                errorMessage += "warnings ";
+            
+            errorMessage += "in " + numProblematicFiles + " file";
+            // pluralise
+            if (numProblematicFiles > 1) {
+                errorMessage += "s";
+            }
+            errorMessage += "! Please see errors/warning above!";
+            
 
-        	// pluralise
-        	if (numProblematicFiles > 1) {
-        		errorMessage += "s";
-        	}
-
-            errorMessage += errorRecap.toString();
-
-        	if (failOnError) {
-        		throw new MojoExecutionException(errorMessage);
-        	} else {
-        		getLog().info(errorMessage);
-        	}
+            errorMessage += "\nJSHint is ";
+            if (!failOnError && !failOnWarning) {
+                errorMessage += "not configured to fail on error or warning.";
+            } else {
+                errorMessage += "configured to fail on ";
+                if (failOnError)
+                    errorMessage += "error ";
+                if (failOnError && failOnWarning)
+                    errorMessage += "or ";
+                if (failOnWarning)
+                    errorMessage += "warning ";
+            }
+            
+            if (hasErrors || hasWarnings)
+            
+            if ((failOnError && hasErrors) || (failOnWarning && hasWarnings)) {
+                throw new MojoExecutionException(errorMessage);
+            } else {
+                getLog().info(errorMessage);
+            }
         }
     }
 
