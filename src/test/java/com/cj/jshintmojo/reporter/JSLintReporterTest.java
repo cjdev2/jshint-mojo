@@ -1,7 +1,7 @@
 package com.cj.jshintmojo.reporter;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
 
 import org.junit.Test;
 
@@ -43,7 +43,7 @@ public class JSLintReporterTest {
                 "\t<file name=\"/path/to/A.js\">\n" +
                 "\t\t<issue line=\"5\" char=\"2\" reason=\"Missing semicolon.\" evidence=\"}\" severity=\"W\" />\n" +
                 "\t\t<issue line=\"12\" char=\"5\" reason=\"Bad line breaking before &apos;&amp;&amp;&apos;.\" evidence=\"    &amp;&amp; window.setImmediate;\" severity=\"W\" />\n" +
-                "\t\t<issue line=\"1137\" char=\"26\" reason=\"Too many errors.\" evidence=\"\" severity=\"E\" />\n" +
+                "\t\t<issue line=\"1137\" char=\"26\" reason=\"Too many hints.\" evidence=\"\" severity=\"E\" />\n" +
                 "\t</file>\n" +
                 "</jslint>\n"));
     }
@@ -58,7 +58,7 @@ public class JSLintReporterTest {
                 "\t<file name=\"/path/to/A.js\">\n" +
                 "\t\t<issue line=\"5\" char=\"2\" reason=\"Missing semicolon.\" evidence=\"}\" severity=\"W\" />\n" +
                 "\t\t<issue line=\"12\" char=\"5\" reason=\"Bad line breaking before &apos;&amp;&amp;&apos;.\" evidence=\"    &amp;&amp; window.setImmediate;\" severity=\"W\" />\n" +
-                "\t\t<issue line=\"1137\" char=\"26\" reason=\"Too many errors.\" evidence=\"\" severity=\"E\" />\n" +
+                "\t\t<issue line=\"1137\" char=\"26\" reason=\"Too many hints.\" evidence=\"\" severity=\"E\" />\n" +
                 "\t</file>\n" +
                 "\t<file name=\"/path/to/B.js\">\n" +
                 "\t\t<issue line=\"10\" char=\"5\" reason=\"Comma warnings can be turned off with &apos;laxcomma&apos;.\" evidence=\"    , [info, &quot;info&quot;]\" severity=\"I\" />\n" +
