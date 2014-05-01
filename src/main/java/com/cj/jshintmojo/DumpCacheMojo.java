@@ -22,24 +22,25 @@ public class DumpCacheMojo extends AbstractMojo {
 	 * @required
 	 */
 	private File basedir;
-	
-	public void execute() throws MojoExecutionException, MojoFailureException {
+
+	@Override
+    public void execute() throws MojoExecutionException, MojoFailureException {
 		try {
-			
+
 			final File cachePath = new File(basedir, "target/lint.cache");
-			
+
 			final Map<String, Result> entries;
 			if(cachePath.exists()){
 				entries = Util.readObject(cachePath);
 			}else{
 				entries = new HashMap<String, Result>();
 			}
-			
+
 			for(Result r : entries.values()){
-				String status = r.errors.isEmpty()?"[OK]":"[BAD]";
+				String status = r.hints.isEmpty()?"[OK]":"[BAD]";
 				System.out.println(status + " " + r.path);
 			}
-			
+
 		} catch (Exception e) {
 			throw new MojoExecutionException("Something bad happened", e);
 		}

@@ -12,26 +12,25 @@
 	<version>1.3.1-SNAPSHOT</version>
 	<packaging>maven-plugin</packaging>
 
-        <name>${project.artifactId}</name>
+	<name>${project.artifactId}</name>
 
 	<build>
-
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>2.3.2</version>
-				<configuration>
-					<source>1.6</source>
-					<target>1.6</target>
-				</configuration>
-			</plugin>
-			<plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-release-plugin</artifactId>
-        <version>2.4</version>
-      </plugin>
-		</plugins>
+	<plugins>
+		<plugin>
+			<groupId>org.apache.maven.plugins</groupId>
+			<artifactId>maven-compiler-plugin</artifactId>
+			<version>2.3.2</version>
+			<configuration>
+				<source>1.6</source>
+				<target>1.6</target>
+			</configuration>
+		</plugin>
+		<plugin>
+			<groupId>org.apache.maven.plugins</groupId>
+			<artifactId>maven-release-plugin</artifactId>
+			<version>2.4</version>
+		</plugin>
+	</plugins>
 	</build>
 	<dependencies>
 		<dependency>
@@ -66,35 +65,39 @@
 			<version>4.11</version>
 			<scope>test</scope>
 		</dependency>
-        <dependency>
-            <groupId>commons-lang</groupId>
-            <artifactId>commons-lang</artifactId>
-            <version>2.6</version>
-        </dependency>
+		<dependency>
+			<groupId>commons-lang</groupId>
+			<artifactId>commons-lang</artifactId>
+			<version>2.6</version>
+		</dependency>
 	</dependencies>
 
 	<!-- BEGIN: STUFF REQUIRED BY THE CENTRAL REPO -->
 	<description>a maven mojo that integrates the 'jshint' javascript preprocessor</description>
-        <url>https://github.com/cjdev/httpobjects</url>
-        <licenses>
-	    <license>
-	        <name>GPL 2 + classpath exception</name>
-                <url>https://raw.github.com/cjdev/jshint-mojo/master/LICENSE</url>
-	    </license>
-        </licenses>
+	<url>https://github.com/cjdev/httpobjects</url>
+	<licenses>
+		<license>
+			<name>GPL 2 + classpath exception</name>
+			<url>https://raw.github.com/cjdev/jshint-mojo/master/LICENSE</url>
+		</license>
+	</licenses>
 	<scm>
-	    <connection>scm:git:git@github.com:cjdev/jshint-mojo.git</connection>
-	    <url>scm:git:git@github.com:cjdev/jshint-mojo.git</url>
-	    <developerConnection>scm:git:git@github.com:cjdev/jshint-mojo.git</developerConnection>
-	  <tag>HEAD</tag>
-  </scm>
+		<connection>scm:git:git@github.com:cjdev/jshint-mojo.git</connection>
+		<url>scm:git:git@github.com:cjdev/jshint-mojo.git</url>
+		<developerConnection>scm:git:git@github.com:cjdev/jshint-mojo.git</developerConnection>
+		<tag>HEAD</tag>
+	</scm>
 
-        <developers>
-	    <developer>
-                <id>stu</id>
-	        <name>Stu Penrose</name>
-	        <email>stu@penrose.us</email>
-	    </developer>
+	<developers>
+		<developer>
+			<id>stu</id>
+			<name>Stu Penrose</name>
+			<email>stu@penrose.us</email>
+		</developer>
+		<developer>
+			<id>Sebl29</id>
+			<email>Sebl29@github.com</email>
+		</developer>
 	</developers>
-        <!--   END: STUFF REQUIRED BY THE CENTRAL REPO -->
+	<!--   END: STUFF REQUIRED BY THE CENTRAL REPO -->
 </project>
