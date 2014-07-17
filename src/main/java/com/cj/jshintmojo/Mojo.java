@@ -32,10 +32,12 @@ import com.cj.jshintmojo.jshint.FunctionalJava.Fn;
 import com.cj.jshintmojo.jshint.JSHint;
 import com.cj.jshintmojo.jshint.JSHint.Error;
 import com.cj.jshintmojo.reporter.CheckStyleReporter;
+import com.cj.jshintmojo.reporter.HTMLReporter;
 import com.cj.jshintmojo.reporter.JSHintReporter;
 import com.cj.jshintmojo.reporter.JSLintReporter;
 import com.cj.jshintmojo.util.OptionsParser;
 import com.cj.jshintmojo.util.Util;
+
 import java.util.Collections;
 
 /**
@@ -322,6 +324,8 @@ public class Mojo extends AbstractMojo {
         JSHintReporter reporter = null;
         if(JSLintReporter.FORMAT.equalsIgnoreCase(reportType)){
             reporter = new JSLintReporter();
+        }else if(HTMLReporter.FORMAT.equalsIgnoreCase(reportType)){
+            reporter = new HTMLReporter();
         }else if(CheckStyleReporter.FORMAT.equalsIgnoreCase(reportType)){
             reporter = new CheckStyleReporter();
         }else if(StringUtils.isNotBlank(reportType)){
