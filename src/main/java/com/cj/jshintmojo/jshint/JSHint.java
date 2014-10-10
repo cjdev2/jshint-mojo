@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.CharEncoding;
 import org.mozilla.javascript.EcmaError;
 import org.mozilla.javascript.NativeArray;
 import org.mozilla.javascript.NativeObject;
@@ -93,7 +94,7 @@ public class JSHint {
 
     private static String toString(InputStream in) {
         try {
-            return IOUtils.toString(in);
+            return IOUtils.toString(in, CharEncoding.UTF_8);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
