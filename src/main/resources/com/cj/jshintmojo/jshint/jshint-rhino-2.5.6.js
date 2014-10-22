@@ -10917,7 +10917,7 @@ if (typeof exports === 'object' && exports) exports.JSHINT = JSHINT;
   var opts      = {};
   var globals   = {};
   var retval    = 0;
-  var readf     = (typeof readFully === "function" ? readFully : readFile);
+  var readf     = (typeof this.readFully === "function" ? this.readFully : this.readFile);
 
   var optstr; // arg1=val1,arg2=val2,...
   var predef; // global1=true,global2,global3,...
