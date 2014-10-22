@@ -26,6 +26,10 @@ public class EmbeddedVersionsTest {
         protected String expectedErrorMessageForTwoTooManyParameters(){
             return "This function has too many parameters. (2)";
         }
+
+        protected String expectedLineTooLongMessage(){
+            return "Line is too long.";
+        }
     }
 
     @Parameters(name = "Test for compatiblity with jshint version {0}")
@@ -54,6 +58,10 @@ public class EmbeddedVersionsTest {
                 @Override
                 protected String expectedEvalIsEvilMessage() {
                     return "eval is evil.";
+                }
+
+                protected String expectedLineTooLongMessage(){
+                    return "Line too long.";
                 }
             };
         }else{
@@ -102,8 +110,8 @@ public class EmbeddedVersionsTest {
     public void supportsOptionsThatTakeANumericValue(){
         // given
         final String globals = "alert";
-        final String options = "indent:4";
-        final InputStream code = toStream(" alert('Bad Indentation');");
+        final String options = "maxlen:10";
+        final InputStream code = toStream(" alert('Over Max Length');");
         final JSHint jsHint = new JSHint(jshintVersion);
 
         // when
@@ -112,7 +120,7 @@ public class EmbeddedVersionsTest {
         // then
         Assert.assertNotNull(errors);
         Assert.assertEquals(1, errors.size());
-        Assert.assertEquals("Expected 'alert' to have an indentation at 1 instead at 2.", errors.get(0).reason);
+        Assert.assertEquals(variants.expectedLineTooLongMessage(), errors.get(0).reason);
     }
 
     @Test
