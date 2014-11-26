@@ -88,7 +88,7 @@ public class Mojo extends AbstractMojo {
 	private String ignoreFile = "";
 
     /**
-     * @parameter expression="${jshint.version}"
+     * @parameter property="jshint.version"
      */
     private String version = "2.5.6";
 	
