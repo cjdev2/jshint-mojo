@@ -32,7 +32,7 @@ public class EmbeddedVersionsTest {
         }
     }
 
-    @Parameters(name = "Test for compatiblity with jshint version {0}")
+    @Parameters(name = "Test for compatibility with jshint version {0}")
     public static Collection<Object[]> data() {
         List<Object[]> params = new ArrayList<Object[]>();
         for(String version : EmbeddedJshintCode.EMBEDDED_VERSIONS.keySet()){
@@ -47,29 +47,8 @@ public class EmbeddedVersionsTest {
     public EmbeddedVersionsTest(String jshintVersion) {
         super();
         this.jshintVersion = EmbeddedJshintCode.EMBEDDED_VERSIONS.get(jshintVersion);
-
-        if(jshintVersion.equals("r12")){
-            variants = new OutputMessagesVariant(){
-                @Override
-                protected String expectedErrorMessageForTwoTooManyParameters() {
-                    return "Too many parameters per function (2).";
-                }
-
-                @Override
-                protected String expectedEvalIsEvilMessage() {
-                    return "eval is evil.";
-                }
-
-                protected String expectedLineTooLongMessage(){
-                    return "Line too long.";
-                }
-            };
-        }else{
-            variants = new OutputMessagesVariant();
-        }
+        variants = new OutputMessagesVariant();
     }
-
-
 
     @Test
     public void booleanOptionsCanBeFalse(){
@@ -87,8 +66,6 @@ public class EmbeddedVersionsTest {
         Assert.assertEquals(1, errors.size());
         Assert.assertEquals(variants.expectedEvalIsEvilMessage(), errors.get(0).reason);
     }
-
-
 
     @Test
     public void booleanOptionsCanBeTrue(){
@@ -178,9 +155,9 @@ public class EmbeddedVersionsTest {
     }
 
     private static String toString(List<Error> errors) {
-        StringBuffer text = new StringBuffer();
-        for(Error error: errors){
-            text.append(error.reason + "\n");
+        StringBuilder text = new StringBuilder ();
+        for (Error error: errors){
+            text.append (error.reason).append ("\n");
         }
         return text.toString();
     }

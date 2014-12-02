@@ -2,6 +2,7 @@ package com.cj.jshintmojo.reporter;
 
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -26,11 +27,12 @@ public class CheckStyleReporter implements JSHintReporter {
         StringBuilder buf = new StringBuilder();
         buf.append("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
         buf.append("<checkstyle version=\"4.3\">\n");
-        String[] files = results.keySet().toArray(new String[0]);
+        Set <String> fileNames = results.keySet ();
+        String [] files = fileNames.toArray (new String [fileNames.size ()]);
         Arrays.sort(files);
         for(String file : files){
             Result result = results.get(file);
-            buf.append("\t<file name=\"" + result.path + "\">\n");
+            buf.append ("\t<file name=\"").append (result.path).append ("\">\n");
             for(JSHint.Error error : result.errors){
                 buf.append(String.format("\t\t<error line=\"%d\" column=\"%d\" message=\"%s\" source=\"jshint.%s\" severity=\"%s\" />\n",
                         error.line.intValue(), error.character.intValue(), encode(error.reason), encode(error.code), severity(error.code)));
