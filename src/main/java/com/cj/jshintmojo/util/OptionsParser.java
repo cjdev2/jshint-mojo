@@ -66,12 +66,12 @@ public class OptionsParser {
 	public static Set<String> extractGlobals(byte[] configFileContents) {
 		String withoutComments = removeComments(new String(configFileContents));
 		Matcher matcher = GLOBALS_PATTERN.matcher(withoutComments);
-		matcher.find();
-		String globalsCsv = matcher.group(1).replaceAll("\\s", "").replaceAll("\"", "");
-
 		Set<String> globalsSet = new HashSet<String>();
-		for (String global : globalsCsv.split(",")) {
-			globalsSet.add(global);
+		if (matcher.find()) {
+			String globalsCsv = matcher.group(1).replaceAll("\\s", "").replaceAll("\"", "");
+
+			for (String global : globalsCsv.split(",")) {
+				globalsSet.add(global);
 		}
 		return globalsSet;
 	}
