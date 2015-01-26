@@ -1,5 +1,6 @@
 package com.cj.jshintmojo.util;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -59,20 +60,22 @@ public class OptionsParser {
 	}
 
 	/**
-	 * @param configFileContentsBytes
+	 * @param configFileContents
 	 *            JSON-like file contents
 	 * @return set of JSHint allowed globals
 	 */
 	public static Set<String> extractGlobals(byte[] configFileContents) {
 		String withoutComments = removeComments(new String(configFileContents));
 		Matcher matcher = GLOBALS_PATTERN.matcher(withoutComments);
-		matcher.find();
-		String globalsCsv = matcher.group(1).replaceAll("\\s", "").replaceAll("\"", "");
+		if(matcher.find()) {
+            String globalsCsv = matcher.group(1).replaceAll("\\s", "").replaceAll("\"", "");
 
-		Set<String> globalsSet = new HashSet<String>();
-		for (String global : globalsCsv.split(",")) {
-			globalsSet.add(global);
-		}
-		return globalsSet;
+            Set<String> globalsSet = new HashSet<String>();
+            Collections.addAll(globalsSet, globalsCsv.split(","));
+            return globalsSet;
+        } else {
+            throw new RuntimeException(String.format(
+                    "Unable to find pattern '%s' in text '%s'", GLOBALS_PATTERN, withoutComments));
+        }
 	}
 }

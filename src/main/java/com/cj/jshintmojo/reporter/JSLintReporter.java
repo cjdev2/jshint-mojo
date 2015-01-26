@@ -2,6 +2,7 @@ package com.cj.jshintmojo.reporter;
 
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -26,16 +27,17 @@ public class JSLintReporter implements JSHintReporter {
         StringBuilder buf = new StringBuilder();
         buf.append("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
         buf.append("<jslint>\n");
-        String[] files = results.keySet().toArray(new String[0]);
+        Set<String> strings = results.keySet();
+        String[] files = strings.toArray(new String[strings.size()]);
         Arrays.sort(files);
         for(String file : files){
             Result result = results.get(file);
-            buf.append("\t<file name=\"" + result.path + "\">\n");
+            buf.append("\t<file name=\"").append(result.path).append("\">\n");
             for(JSHint.Error issue : result.errors){
                 buf.append(String.format("\t\t<issue line=\"%d\" char=\"%d\" reason=\"%s\" evidence=\"%s\" ",
                         issue.line.intValue(), issue.character.intValue(), encode(issue.reason), encode(issue.evidence)));
                 if(StringUtils.isNotEmpty(issue.code)){
-                    buf.append("severity=\"" + issue.code.charAt(0) + "\" ");
+                    buf.append("severity=\"").append(issue.code.charAt(0)).append("\" ");
                 }
                 buf.append("/>\n");
             }
