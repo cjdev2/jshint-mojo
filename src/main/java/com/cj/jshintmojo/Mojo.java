@@ -336,6 +336,7 @@ public class Mojo extends AbstractMojo {
         }
         File file = StringUtils.isNotBlank(reportFile) ?
                 new File(reportFile) : new File("target/jshint.xml");
+        mkdirs(file.getParentFile());
         getLog().info(String.format("Generating \"JSHint\" report. reporter=%s, reportFile=%s.",
                 reportType, file.getAbsolutePath()));
 
