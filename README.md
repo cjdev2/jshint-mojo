@@ -1,4 +1,4 @@
-# Simple JSHint Mojo
+# Simple JSHint Mojo [![Maven Central](https://img.shields.io/maven-central/v/com.cj.jshintmojo/jshint-maven-plugin.svg)](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22com.cj.jshintmojo%22%20AND%20a%3A%22jshint-maven-plugin%22)
 
 It's real simple and it runs [JSHint](http://www.jshint.com/) on your *.js files.
 
