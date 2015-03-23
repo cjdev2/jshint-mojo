@@ -78,7 +78,7 @@ public class Mojo extends AbstractMojo {
 	private String reporter = "";
 
 	/**
-	 * @parameter property="reportFile"
+	 * @parameter property="reportFile" default-value="${project.build.directory}/jshint.xml"
 	 */
 	private String reportFile = "";
 
@@ -334,8 +334,7 @@ public class Mojo extends AbstractMojo {
         }else{
             return;
         }
-        File file = StringUtils.isNotBlank(reportFile) ?
-                new File(reportFile) : new File("target/jshint.xml");
+        File file = new File(reportFile);
         getLog().info(String.format("Generating \"JSHint\" report. reporter=%s, reportFile=%s.",
                 reportType, file.getAbsolutePath()));
 
