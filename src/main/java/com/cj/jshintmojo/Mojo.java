@@ -103,10 +103,16 @@ public class Mojo extends AbstractMojo {
 	 * @required
 	 */
 	File basedir;
-	
+
+	/**
+	 * @parameter default-value="false"
+	 * @required
+	 */
+	private boolean skip = false;
+
 	public Mojo() {}
-	
-	public Mojo(String options, String globals, File basedir, List<String> directories, List<String> excludes, boolean failOnError, String configFile, String reporter, String reportFile, String ignoreFile) {
+
+	public Mojo(String options, String globals, File basedir, List<String> directories, List<String> excludes, boolean failOnError, String configFile, String reporter, String reportFile, String ignoreFile, boolean skip) {
 		super();
 		this.options = options;
 		this.globals = globals;
@@ -118,13 +124,17 @@ public class Mojo extends AbstractMojo {
 		this.reporter = reporter;
 		this.reportFile = reportFile;
 		this.ignoreFile = ignoreFile;
+		this.skip = skip;
 	}
-	
+
 	public void execute() throws MojoExecutionException, MojoFailureException {
+	    if (skip) {
+	      return;
+	    }
 	    getLog().info("using jshint version " + version);
 
 	    final String jshintCode = getEmbeddedJshintCode(version);
-	    
+
         final JSHint jshint = new JSHint(jshintCode);
 
         final Config config = readConfig(this.options, this.globals, this.configFile, this.basedir, getLog());
