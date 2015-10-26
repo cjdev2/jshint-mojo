@@ -1,37 +1,48 @@
 package com.cj.jshintmojo.jshint;
 
-import com.cj.jshintmojo.util.Rhino;
+import java.io.File;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.CharEncoding;
 import org.mozilla.javascript.EcmaError;
 import org.mozilla.javascript.NativeArray;
+import java.io.IOException;
 import org.mozilla.javascript.NativeObject;
 
 import java.io.InputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import com.cj.jshintmojo.util.Rhino;
+import org.apache.commons.io.FileUtils;
 
 public class JSHint {
 
     private final Rhino rhino;
 
-    public JSHint (String jshintCode) {
-
-        rhino = new Rhino ();
-        try {
-            rhino.eval (
-                    "print=function(){};" +
-                            "quit=function(){};" +
-                            "arguments=[];");
-
-            rhino.eval (commentOutTheShebang (resourceAsString (jshintCode)));
-        } catch (EcmaError e) {
-            throw new RuntimeException ("Javascript eval error:" + e.getScriptStackTrace (), e);
-        }
+    public JSHint(File customJSHint) throws IOException {
+        rhino = createRhino(FileUtils.readFileToString(customJSHint, "UTF-8"));
     }
 
-    private String commentOutTheShebang (String code) {
+    public JSHint(String jshintCode) {
+        rhino = createRhino(resourceAsString(jshintCode));
+    }
+
+    private static Rhino createRhino(final String code) {
+        Rhino result = new Rhino();
+        try {
+            result.eval(
+                    "print=function(){};" +
+                    "quit=function(){};" +
+                    "arguments=[];");
+
+            result.eval(commentOutTheShebang(code));
+        } catch (EcmaError e) {
+            throw new RuntimeException("Javascript eval error:" + e.getScriptStackTrace(), e);
+        }
+        return result;
+    }
+
+    private static String commentOutTheShebang(String code) {
         String minusShebang = code.startsWith ("#!") ? "//" + code : code;
         return minusShebang;
     }
