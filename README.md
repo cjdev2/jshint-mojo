@@ -15,7 +15,7 @@ It's real simple and it runs [JSHint](http://www.jshint.com/) on your *.js files
 | configFile      |                               | Path to a JSHint JSON config file. Its contents will override values set in `options` and `globals`, if present. Please note that block and line comments will be stripped prior to processing so it's OK to include them. |
 | directories     | `<directory>src</directory>`  | Locations in which the plugin will search for *.js files |
 | excludes        |                               | Excludes are resolved relative to the source directories. Standard maven semantics apply. |
-| includes        |                               | Includes are resolved relative to the source directories. Standard maven semantics apply. Default inclusion rule is: "**/*.js" |
+| includes        | "\*\*/\*.js"                     | Includes are resolved relative to the source directories. Standard maven semantics apply. |
 | reporter        |                               | If present, JSHint will generate a reporting file which can be used for some CI tools. Currently, `jslint`, `html`, and `checkstyle` formats are supported. |
 | reportFile      | target/jshint.xml             | Path to an output reporting file |
 | failOnError     | `true`                          | Controls whether the plugin fails the build when JSHint is unhappy. Setting this to `false` is discouraged, as it removes most of the benefit of using this plugin. Instead, if you have problem files that you can't fix [disable/override JSHint on a per-file basis](http://www.jshint.com/docs/#config), or tell the plugin to specifically exclude them in the `excludes` section |

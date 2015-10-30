@@ -50,10 +50,10 @@ public class Mojo extends AbstractMojo {
 	 */
 	private final List<String> directories = new ArrayList<String>();
 
-    /**
-     * @parameter property="includes"
-     */
-    private final List<String> includes = new ArrayList<String>();
+	/**
+	 * @parameter property="includes"
+	 */
+	private final List<String> includes = new ArrayList<String>();
 
 	/**
 	 * @parameter property="excludes"
@@ -90,10 +90,10 @@ public class Mojo extends AbstractMojo {
 	 */
 	private String ignoreFile = "";
 
-    /**
-     * @parameter property="jshint.version"
-     */
-    private String version = "2.5.6";
+	/**
+	 * @parameter property="jshint.version"
+	 */
+	private String version = "2.5.6";
 	
 	/**
 	 * @parameter 
@@ -115,7 +115,7 @@ public class Mojo extends AbstractMojo {
 		this.globals = globals;
 		this.basedir = basedir;
 		this.directories.addAll(directories);
-        this.includes.addAll(includes);
+		this.includes.addAll(includes);
 		this.excludes.addAll(excludes);
 		this.failOnError = failOnError;
 		this.configFile = configFile;
@@ -125,21 +125,21 @@ public class Mojo extends AbstractMojo {
 	}
 	
 	public void execute() throws MojoExecutionException, MojoFailureException {
-	    getLog().info("using jshint version " + version);
+		getLog().info("using jshint version " + version);
 
-	    final String jshintCode = getEmbeddedJshintCode(version);
-	    
-        final JSHint jshint = new JSHint(jshintCode);
+		final String jshintCode = getEmbeddedJshintCode(version);
+		
+		final JSHint jshint = new JSHint(jshintCode);
 
-        final Config config = readConfig(this.options, this.globals, this.configFile, this.basedir, getLog());
-        if (includes.isEmpty()) {
-            includes.add("**/*.js");
-        }
-        if(directories.isEmpty()){
-            directories.add("src");
-        }
+		final Config config = readConfig(this.options, this.globals, this.configFile, this.basedir, getLog());
+		if (includes.isEmpty()) {
+			includes.add("**/*.js");
+		}
+		if(directories.isEmpty()){
+			directories.add("src");
+		}
 
-        final Cache.Hash cacheHash = new Cache.Hash(config.options, config.globals, this.version, this.configFile, this.directories, this.excludes, this.includes);
+		final Cache.Hash cacheHash = new Cache.Hash(config.options, config.globals, this.version, this.configFile, this.directories, this.excludes, this.includes);
 
 		try {
 			final File targetPath = new File(basedir, "target");
@@ -153,271 +153,271 @@ public class Mojo extends AbstractMojo {
 			
 			Util.writeObject(new Cache(cacheHash, currentResults), cachePath);
 			
-            handleResults(currentResults, this.reporter, this.reportFile);
-            
+			handleResults(currentResults, this.reporter, this.reportFile);
+			
 		} catch (FileNotFoundException e) {
 			throw new MojoExecutionException("Something bad happened", e);
 		}
 	}
 	
 	static class Config {
-	    final String options, globals;
+		final String options, globals;
 
-        public Config(String options, String globals) {
-            super();
-            this.options = options;
-            this.globals = globals;
-        }
-	    
+		public Config(String options, String globals) {
+			super();
+			this.options = options;
+			this.globals = globals;
+		}
+		
 	}
 	
-    private static Config readConfig(String options, String globals, String configFileParam, File basedir, Log log) throws MojoExecutionException {
-        final File jshintRc = findJshintrc(basedir);
-        final File configFile = StringUtils.isNotBlank(configFileParam)?new File(basedir, configFileParam):null;
-        
-        final Config config;
-        if(options==null){
-            if(configFile!=null){
-                log.info("Using configuration file: " + configFile.getAbsolutePath());
-                config = processConfigFile(configFile);
-            }else if(jshintRc!=null){
-                log.info("Using configuration file: " + jshintRc.getAbsolutePath());
-                config = processConfigFile(jshintRc);
-            }else{
-                config = new Config("", globals);
-            }
-        }else{
-            config = new Config(options, globals);
-        }
-        
-        return config;
-    }
+	private static Config readConfig(String options, String globals, String configFileParam, File basedir, Log log) throws MojoExecutionException {
+		final File jshintRc = findJshintrc(basedir);
+		final File configFile = StringUtils.isNotBlank(configFileParam)?new File(basedir, configFileParam):null;
+		
+		final Config config;
+		if(options==null){
+			if(configFile!=null){
+				log.info("Using configuration file: " + configFile.getAbsolutePath());
+				config = processConfigFile(configFile);
+			}else if(jshintRc!=null){
+				log.info("Using configuration file: " + jshintRc.getAbsolutePath());
+				config = processConfigFile(jshintRc);
+			}else{
+				config = new Config("", globals);
+			}
+		}else{
+			config = new Config(options, globals);
+		}
+		
+		return config;
+	}
 
-    static class Ignore {
+	static class Ignore {
 
-        final List<File> files;
+		final List<File> files;
 
-        public Ignore(List<File> files) {
-            this.files = files;
-        }
+		public Ignore(List<File> files) {
+			this.files = files;
+		}
 
-    }
+	}
 
-    private static Ignore readIgnore(String ignoreFileParam, File basedir, Log log) throws MojoExecutionException {
-        final File jshintignore = findJshintignore(basedir);
-        final File ignoreFile = StringUtils.isNotBlank(ignoreFileParam) ? new File(basedir, ignoreFileParam) : null;
+	private static Ignore readIgnore(String ignoreFileParam, File basedir, Log log) throws MojoExecutionException {
+		final File jshintignore = findJshintignore(basedir);
+		final File ignoreFile = StringUtils.isNotBlank(ignoreFileParam) ? new File(basedir, ignoreFileParam) : null;
 
-        final Ignore ignore;
-        if (ignoreFile != null) {
-            log.info("Using ignore file: " + ignoreFile.getAbsolutePath());
-            ignore = processIgnoreFile(basedir, ignoreFile);
-        } else if (jshintignore != null) {
-            log.info("Using ignore file: " + jshintignore.getAbsolutePath());
-            ignore = processIgnoreFile(basedir, jshintignore);
-        } else {
-            ignore = new Ignore(Collections.<File>emptyList());
-        }
+		final Ignore ignore;
+		if (ignoreFile != null) {
+			log.info("Using ignore file: " + ignoreFile.getAbsolutePath());
+			ignore = processIgnoreFile(basedir, ignoreFile);
+		} else if (jshintignore != null) {
+			log.info("Using ignore file: " + jshintignore.getAbsolutePath());
+			ignore = processIgnoreFile(basedir, jshintignore);
+		} else {
+			ignore = new Ignore(Collections.<File>emptyList());
+		}
 
-        return ignore;
-    }
+		return ignore;
+	}
 
-    private List<File> findFilesToCheck() throws MojoExecutionException {
-        List<File> javascriptFiles = new ArrayList<File>();
+	private List<File> findFilesToCheck() throws MojoExecutionException {
+		List<File> javascriptFiles = new ArrayList<File>();
 
-        String includesStr = StringUtils.join(includes.iterator(), ",");
-        String excludesStr = StringUtils.join(excludes.iterator(), ",");
+		String includesStr = StringUtils.join(includes.iterator(), ",");
+		String excludesStr = StringUtils.join(excludes.iterator(), ",");
 
-        for(String next: directories) {
-            File path = new File(basedir, next);
-            if (!path.exists() || !path.isDirectory()) {
-                getLog().warn("You told me to find tests in " + next + ", but there is nothing there (" + path.getAbsolutePath() + ")");
-            } else {
-                try {
-                    javascriptFiles.addAll(FileUtils.getFiles(path, includesStr, excludesStr));
-                } catch (IOException ioe) {
-                    getLog().warn("Error while processing inclusion / exclusion files for directory: " + path.getAbsolutePath());
-                }
-            }
-        }
+		for(String next: directories) {
+			File path = new File(basedir, next);
+			if (!path.exists() || !path.isDirectory()) {
+				getLog().warn("You told me to find tests in " + next + ", but there is nothing there (" + path.getAbsolutePath() + ")");
+			} else {
+				try {
+					javascriptFiles.addAll(FileUtils.getFiles(path, includesStr, excludesStr));
+				} catch (IOException ioe) {
+					getLog().warn("Error while processing inclusion / exclusion files for directory: " + path.getAbsolutePath());
+				}
+			}
+		}
 
-        // Support the ignore file definitions, by removing any contents of the ignore list from the list of javascriptFiles.
-        // Because the MojoTest expects to see WARN level output for each file excluded, we can't do this.
-        // javascriptFiles.removeAll(readIgnore(this.ignoreFile, this.basedir, getLog()).files);
-        // And we have to do this instead.
-        for (File ignoredFile : readIgnore(this.ignoreFile, this.basedir, getLog()).files) {
-            if (javascriptFiles.remove(ignoredFile)) {
-                getLog().debug("Excluding " + ignoredFile.getAbsolutePath());
-            }
-        }
+		// Support the ignore file definitions, by removing any contents of the ignore list from the list of javascriptFiles.
+		// Because the MojoTest expects to see WARN level output for each file excluded, we can't do this.
+		// javascriptFiles.removeAll(readIgnore(this.ignoreFile, this.basedir, getLog()).files);
+		// And we have to do this instead.
+		for (File ignoredFile : readIgnore(this.ignoreFile, this.basedir, getLog()).files) {
+			if (javascriptFiles.remove(ignoredFile)) {
+				getLog().debug("Excluding " + ignoredFile.getAbsolutePath());
+			}
+		}
 
-        return javascriptFiles;
-    }
+		return javascriptFiles;
+	}
 
-    private static Map<String, Result> lintTheFiles(final JSHint jshint, final Cache cache, List<File> filesToCheck, final Config config, final Log log) throws FileNotFoundException {
-        final Map<String, Result> currentResults = new HashMap<String, Result>();
-        for(File file : filesToCheck){
-        	Result previousResult = cache.previousResults.get(file.getAbsolutePath());
-        	Result theResult;
-        	if(previousResult==null || (previousResult.lastModified.longValue()!=file.lastModified())){
-        		log.info("  " + file );
-        		List<Error> errors = jshint.run(new FileInputStream(file), config.options, config.globals);
-        		theResult = new Result(file.getAbsolutePath(), file.lastModified(), errors); 
-        	}else{
-        		log.info("  " + file + " [no change]");
-        		theResult = previousResult;
-        	}
-        	
-        	if(theResult!=null){
-        		currentResults.put(theResult.path, theResult);
-        		Result r = theResult;
-        		currentResults.put(r.path, r);
-        		for(Error error: r.errors){
-        			log.error("   " + error.line.intValue() + "," + error.character.intValue() + ": " + error.reason);
-        		}
-        	}
-        }
-        return currentResults;
-    }
+	private static Map<String, Result> lintTheFiles(final JSHint jshint, final Cache cache, List<File> filesToCheck, final Config config, final Log log) throws FileNotFoundException {
+		final Map<String, Result> currentResults = new HashMap<String, Result>();
+		for(File file : filesToCheck){
+			Result previousResult = cache.previousResults.get(file.getAbsolutePath());
+			Result theResult;
+			if(previousResult==null || (previousResult.lastModified.longValue()!=file.lastModified())){
+				log.info("  " + file );
+				List<Error> errors = jshint.run(new FileInputStream(file), config.options, config.globals);
+				theResult = new Result(file.getAbsolutePath(), file.lastModified(), errors); 
+			}else{
+				log.info("  " + file + " [no change]");
+				theResult = previousResult;
+			}
+			
+			if(theResult!=null){
+				currentResults.put(theResult.path, theResult);
+				Result r = theResult;
+				currentResults.put(r.path, r);
+				for(Error error: r.errors){
+					log.error("   " + error.line.intValue() + "," + error.character.intValue() + ": " + error.reason);
+				}
+			}
+		}
+		return currentResults;
+	}
 
-    private void handleResults(final Map<String, Result> currentResults,
-            final String reporter, final String reportFile) throws MojoExecutionException
-    {
-        char NEWLINE = '\n';
-        StringBuilder errorRecap = new StringBuilder(NEWLINE);
-        
-        int numProblematicFiles = 0;
-        for(Result r : currentResults.values()){
-        	if(!r.errors.isEmpty()){
-        		numProblematicFiles ++;
+	private void handleResults(final Map<String, Result> currentResults,
+			final String reporter, final String reportFile) throws MojoExecutionException
+	{
+		char NEWLINE = '\n';
+		StringBuilder errorRecap = new StringBuilder(NEWLINE);
+		
+		int numProblematicFiles = 0;
+		for(Result r : currentResults.values()){
+			if(!r.errors.isEmpty()){
+				numProblematicFiles ++;
 
-                errorRecap
-                    .append(NEWLINE)
-                    .append(r.path)
-                    .append(NEWLINE);
+				errorRecap
+					.append(NEWLINE)
+					.append(r.path)
+					.append(NEWLINE);
 
-        		for(Error error: r.errors){
-        			errorRecap
-                        .append("   ")
-                        .append(error.line.intValue())
-                        .append(",")
-                        .append(error.character.intValue())
-                        .append(": ")
-                        .append(error.reason)
-                        .append(NEWLINE);
-        		}
-        	}
-        }
-        
-        if(numProblematicFiles > 0) {
-            saveReportFile(currentResults, reporter, reportFile);
+				for(Error error: r.errors){
+					errorRecap
+						.append("   ")
+						.append(error.line.intValue())
+						.append(",")
+						.append(error.character.intValue())
+						.append(": ")
+						.append(error.reason)
+						.append(NEWLINE);
+				}
+			}
+		}
+		
+		if(numProblematicFiles > 0) {
+			saveReportFile(currentResults, reporter, reportFile);
 
-        	String errorMessage = "\nJSHint found problems with " + numProblematicFiles + " file";
+			String errorMessage = "\nJSHint found problems with " + numProblematicFiles + " file";
 
-        	// pluralise
-        	if (numProblematicFiles > 1) {
-        		errorMessage += "s";
-        	}
+			// pluralise
+			if (numProblematicFiles > 1) {
+				errorMessage += "s";
+			}
 
-            errorMessage += errorRecap.toString();
+			errorMessage += errorRecap.toString();
 
-        	if (failOnError) {
-        		throw new MojoExecutionException(errorMessage);
-        	} else {
-        		getLog().info(errorMessage);
-        	}
-        }
-    }
+			if (failOnError) {
+				throw new MojoExecutionException(errorMessage);
+			} else {
+				getLog().info(errorMessage);
+			}
+		}
+	}
 
-    private void saveReportFile(Map<String, Result> results, String reportType, String reportFile) {
-        JSHintReporter reporter = null;
-        if(JSLintReporter.FORMAT.equalsIgnoreCase(reportType)){
-            reporter = new JSLintReporter();
-        }else if(HTMLReporter.FORMAT.equalsIgnoreCase(reportType)){
-            reporter = new HTMLReporter();
-        }else if(CheckStyleReporter.FORMAT.equalsIgnoreCase(reportType)){
-            reporter = new CheckStyleReporter();
-        }else if(StringUtils.isNotBlank(reportType)){
-            getLog().warn("Unknown reporter \"" + reportType + "\". Skip reporting.");
-            return;
-        }else{
-            return;
-        }
-        File file = StringUtils.isNotBlank(reportFile) ?
-                new File(reportFile) : new File("target/jshint.xml");
-        getLog().info(String.format("Generating \"JSHint\" report. reporter=%s, reportFile=%s.",
-                reportType, file.getAbsolutePath()));
+	private void saveReportFile(Map<String, Result> results, String reportType, String reportFile) {
+		JSHintReporter reporter = null;
+		if(JSLintReporter.FORMAT.equalsIgnoreCase(reportType)){
+			reporter = new JSLintReporter();
+		}else if(HTMLReporter.FORMAT.equalsIgnoreCase(reportType)){
+			reporter = new HTMLReporter();
+		}else if(CheckStyleReporter.FORMAT.equalsIgnoreCase(reportType)){
+			reporter = new CheckStyleReporter();
+		}else if(StringUtils.isNotBlank(reportType)){
+			getLog().warn("Unknown reporter \"" + reportType + "\". Skip reporting.");
+			return;
+		}else{
+			return;
+		}
+		File file = StringUtils.isNotBlank(reportFile) ?
+				new File(reportFile) : new File("target/jshint.xml");
+		getLog().info(String.format("Generating \"JSHint\" report. reporter=%s, reportFile=%s.",
+				reportType, file.getAbsolutePath()));
 
-        String report = reporter.report(results);
-        Writer writer = null;
-        try{
-            writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), "utf-8"));
-            writer.write(report);
-        }catch (IOException e){
-            getLog().error(e);
-        }finally{
-            if(writer != null){
-                 try {
-                    writer.close();
-                } catch (IOException e) {
-                    getLog().error(e);
-                }
-            }
-        }
-    }
+		String report = reporter.report(results);
+		Writer writer = null;
+		try{
+			writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), "utf-8"));
+			writer.write(report);
+		}catch (IOException e){
+			getLog().error(e);
+		}finally{
+			if(writer != null){
+				 try {
+					writer.close();
+				} catch (IOException e) {
+					getLog().error(e);
+				}
+			}
+		}
+	}
 
-    @SuppressWarnings("serial")
-    private static String getEmbeddedJshintCode(String version) throws MojoFailureException {
-        
-        final String resource = EmbeddedJshintCode.EMBEDDED_VERSIONS.get(version);
-        if(resource==null){
-            StringBuffer knownVersions = new StringBuffer();
-            for(String v : EmbeddedJshintCode.EMBEDDED_VERSIONS.keySet()){
-                knownVersions.append("\n    " + v);
-            }
-            throw new MojoFailureException("I don't know about the \"" + version + "\" version of jshint.  Here are the versions I /do/ know about: " + knownVersions);
-        }
-        return resource;
-    }
-    
-    private static File findJshintrc(File cwd) {
-        File placeToLook = cwd;
-        while(placeToLook.getParentFile()!=null){
-            File rcFile = new File(placeToLook, ".jshintrc");
-            if(rcFile.exists()){
-                return rcFile;
-            }else{
-                placeToLook = placeToLook.getParentFile();
-            }
-        }
-        
-        return null;
-    }
+	@SuppressWarnings("serial")
+	private static String getEmbeddedJshintCode(String version) throws MojoFailureException {
+		
+		final String resource = EmbeddedJshintCode.EMBEDDED_VERSIONS.get(version);
+		if(resource==null){
+			StringBuffer knownVersions = new StringBuffer();
+			for(String v : EmbeddedJshintCode.EMBEDDED_VERSIONS.keySet()){
+				knownVersions.append("\n	" + v);
+			}
+			throw new MojoFailureException("I don't know about the \"" + version + "\" version of jshint.  Here are the versions I /do/ know about: " + knownVersions);
+		}
+		return resource;
+	}
+	
+	private static File findJshintrc(File cwd) {
+		File placeToLook = cwd;
+		while(placeToLook.getParentFile()!=null){
+			File rcFile = new File(placeToLook, ".jshintrc");
+			if(rcFile.exists()){
+				return rcFile;
+			}else{
+				placeToLook = placeToLook.getParentFile();
+			}
+		}
+		
+		return null;
+	}
 
-    private static File findJshintignore(File cwd) {
-        File placeToLook = cwd;
-        while (placeToLook.getParentFile() != null) {
-            File ignoreFile = new File(placeToLook, ".jshintignore");
-            if (ignoreFile.exists()) {
-                return ignoreFile;
-            } else {
-                placeToLook = placeToLook.getParentFile();
-            }
-        }
+	private static File findJshintignore(File cwd) {
+		File placeToLook = cwd;
+		while (placeToLook.getParentFile() != null) {
+			File ignoreFile = new File(placeToLook, ".jshintignore");
+			if (ignoreFile.exists()) {
+				return ignoreFile;
+			} else {
+				placeToLook = placeToLook.getParentFile();
+			}
+		}
 
-        return null;
-    }
+		return null;
+	}
 
 	private Cache readCache(File path, Cache.Hash hash){
 		try {
 			if(path.exists()){
 				Cache cache = Util.readObject(path);
-		        if(EqualsBuilder.reflectionEquals(cache.hash, hash)){
-		            return cache;
-		        }else{
-		        	getLog().warn("Something changed ... clearing cache");
-		            return new Cache(hash);
-		        }
-		        
+				if(EqualsBuilder.reflectionEquals(cache.hash, hash)){
+					return cache;
+				}else{
+					getLog().warn("Something changed ... clearing cache");
+					return new Cache(hash);
+				}
+				
 			}
 		} catch (Throwable e) {
 			super.getLog().warn("I was unable to read the cache.  This may be because of an upgrade to the plugin.");
@@ -447,34 +447,34 @@ public class Mojo extends AbstractMojo {
 		if (globalsSet.size() > 0) {
 			globals = StringUtils.join(globalsSet.iterator(), ",");
 		}else{
-		    globals = "";
+			globals = "";
 		}
 
 		if (optionsSet.size() > 0) {
 			options = StringUtils.join(optionsSet.iterator(), ",");
 		}else{
-		    options = "";
+			options = "";
 		}
 		
 		return new Config(options, globals);
 	}
 
-    /**
-     * Read contents of the specified ignore file and use the values defined
-     * there instead of the ones defined directly in pom.xml config.
-     *
-     * @throws MojoExecutionException if the specified file cannot be processed
-     */
-    private static Ignore processIgnoreFile(File basedir, File ignoreFile) throws MojoExecutionException {
-        try {
-            List<String> lines = org.apache.commons.io.FileUtils.readLines(ignoreFile, "UTF-8");
-            List<File> files = new ArrayList<File>(lines.size());
-            for (String line : lines) {
-                files.add(new File(basedir, line));
-            }
-            return new Ignore(files);
-        } catch (IOException e) {
-            throw new MojoExecutionException("Unable to read ignore file located in " + ignoreFile, e);
-        }
-    }
+	/**
+	 * Read contents of the specified ignore file and use the values defined
+	 * there instead of the ones defined directly in pom.xml config.
+	 *
+	 * @throws MojoExecutionException if the specified file cannot be processed
+	 */
+	private static Ignore processIgnoreFile(File basedir, File ignoreFile) throws MojoExecutionException {
+		try {
+			List<String> lines = org.apache.commons.io.FileUtils.readLines(ignoreFile, "UTF-8");
+			List<File> files = new ArrayList<File>(lines.size());
+			for (String line : lines) {
+				files.add(new File(basedir, line));
+			}
+			return new Ignore(files);
+		} catch (IOException e) {
+			throw new MojoExecutionException("Unable to read ignore file located in " + ignoreFile, e);
+		}
+	}
 }
