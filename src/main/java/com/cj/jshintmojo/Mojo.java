@@ -246,7 +246,7 @@ public class Mojo extends AbstractMojo {
         // And we have to do this instead.
         for (File ignoredFile : readIgnore(this.ignoreFile, this.basedir, getLog()).files) {
             if (javascriptFiles.remove(ignoredFile)) {
-                getLog().warn("Excluding " + ignoredFile.getAbsolutePath());
+                getLog().debug("Excluding " + ignoredFile.getAbsolutePath());
             }
         }
 

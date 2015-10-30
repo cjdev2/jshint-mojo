@@ -46,7 +46,7 @@ public class MojoTest {
                 
                 // then
                 assertTrue("Sees ignore files", log.hasMessage("info", "Using ignore file: " + ignoreFile.getAbsolutePath()));
-                assertTrue("Uses ignore files", log.hasMessage("warn", "Excluding " + fileToIgnore.getAbsolutePath()));
+                assertTrue("Uses ignore files", log.hasMessage("debug", "Excluding " + fileToIgnore.getAbsolutePath()));
                 
             }finally{
                 deleteDirectory(directory);
