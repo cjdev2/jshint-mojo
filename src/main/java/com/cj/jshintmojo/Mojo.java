@@ -16,19 +16,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.logging.Log;
+import org.codehaus.plexus.util.FileUtils;
 import org.codehaus.plexus.util.StringUtils;
 
 import com.cj.jshintmojo.cache.Cache;
 import com.cj.jshintmojo.cache.Result;
 import com.cj.jshintmojo.jshint.EmbeddedJshintCode;
-import com.cj.jshintmojo.jshint.FunctionalJava;
-import com.cj.jshintmojo.jshint.FunctionalJava.Fn;
 import com.cj.jshintmojo.jshint.JSHint;
 import com.cj.jshintmojo.jshint.JSHint.Error;
 import com.cj.jshintmojo.reporter.CheckStyleReporter;
@@ -51,6 +49,11 @@ public class Mojo extends AbstractMojo {
 	 * @parameter property="directories"
 	 */
 	private final List<String> directories = new ArrayList<String>();
+
+    /**
+     * @parameter property="includes"
+     */
+    private final List<String> includes = new ArrayList<String>();
 
 	/**
 	 * @parameter property="excludes"
@@ -106,12 +109,13 @@ public class Mojo extends AbstractMojo {
 	
 	public Mojo() {}
 	
-	public Mojo(String options, String globals, File basedir, List<String> directories, List<String> excludes, boolean failOnError, String configFile, String reporter, String reportFile, String ignoreFile) {
+	public Mojo(String options, String globals, File basedir, List<String> directories, List<String> includes, List<String> excludes, boolean failOnError, String configFile, String reporter, String reportFile, String ignoreFile) {
 		super();
 		this.options = options;
 		this.globals = globals;
 		this.basedir = basedir;
 		this.directories.addAll(directories);
+        this.includes.addAll(includes);
 		this.excludes.addAll(excludes);
 		this.failOnError = failOnError;
 		this.configFile = configFile;
@@ -128,15 +132,15 @@ public class Mojo extends AbstractMojo {
         final JSHint jshint = new JSHint(jshintCode);
 
         final Config config = readConfig(this.options, this.globals, this.configFile, this.basedir, getLog());
-        if (this.excludes.isEmpty() || (this.ignoreFile != null && !this.ignoreFile.isEmpty())) {
-            this.excludes.addAll(readIgnore(this.ignoreFile, this.basedir, getLog()).lines);
+        if (includes.isEmpty()) {
+            includes.add("**/*.js");
         }
-        final Cache.Hash cacheHash = new Cache.Hash(config.options, config.globals, this.version, this.configFile, this.directories, this.excludes);
-		
-		if(directories.isEmpty()){
-			directories.add("src");
-		}
-		
+        if(directories.isEmpty()){
+            directories.add("src");
+        }
+
+        final Cache.Hash cacheHash = new Cache.Hash(config.options, config.globals, this.version, this.configFile, this.directories, this.excludes, this.includes);
+
 		try {
 			final File targetPath = new File(basedir, "target");
 			mkdirs(targetPath);
@@ -191,10 +195,10 @@ public class Mojo extends AbstractMojo {
 
     static class Ignore {
 
-        final List<String> lines;
+        final List<File> files;
 
-        public Ignore(List<String> lines) {
-            this.lines = lines;
+        public Ignore(List<File> files) {
+            this.files = files;
         }
 
     }
@@ -206,43 +210,47 @@ public class Mojo extends AbstractMojo {
         final Ignore ignore;
         if (ignoreFile != null) {
             log.info("Using ignore file: " + ignoreFile.getAbsolutePath());
-            ignore = processIgnoreFile(ignoreFile);
+            ignore = processIgnoreFile(basedir, ignoreFile);
         } else if (jshintignore != null) {
             log.info("Using ignore file: " + jshintignore.getAbsolutePath());
-            ignore = processIgnoreFile(jshintignore);
+            ignore = processIgnoreFile(basedir, jshintignore);
         } else {
-            ignore = new Ignore(Collections.<String>emptyList());
+            ignore = new Ignore(Collections.<File>emptyList());
         }
 
         return ignore;
     }
 
-    private List<File> findFilesToCheck() {
+    private List<File> findFilesToCheck() throws MojoExecutionException {
         List<File> javascriptFiles = new ArrayList<File>();
 
-        for(String next: directories){
-        	File path = new File(basedir, next);
-        	if(!path.exists() && !path.isDirectory()){
-        		getLog().warn("You told me to find tests in " + next + ", but there is nothing there (" + path.getAbsolutePath() + ")");
-        	}else{
-        		collect(path, javascriptFiles);
-        	}
+        String includesStr = StringUtils.join(includes.iterator(), ",");
+        String excludesStr = StringUtils.join(excludes.iterator(), ",");
+
+        for(String next: directories) {
+            File path = new File(basedir, next);
+            if (!path.exists() || !path.isDirectory()) {
+                getLog().warn("You told me to find tests in " + next + ", but there is nothing there (" + path.getAbsolutePath() + ")");
+            } else {
+                try {
+                    javascriptFiles.addAll(FileUtils.getFiles(path, includesStr, excludesStr));
+                } catch (IOException ioe) {
+                    getLog().warn("Error while processing inclusion / exclusion files for directory: " + path.getAbsolutePath());
+                }
+            }
         }
 
-        List<File> matches = FunctionalJava.filter(javascriptFiles, new Fn<File, Boolean>(){
-        	public Boolean apply(File i) {
-        		for(String exclude : excludes){
-        			File e = new File(basedir, exclude);
-        			if(i.getAbsolutePath().startsWith(e.getAbsolutePath())){
-        				getLog().warn("Excluding " + i);
-        				return Boolean.FALSE;
-        			}
-        		}
+        // Support the ignore file definitions, by removing any contents of the ignore list from the list of javascriptFiles.
+        // Because the MojoTest expects to see WARN level output for each file excluded, we can't do this.
+        // javascriptFiles.removeAll(readIgnore(this.ignoreFile, this.basedir, getLog()).files);
+        // And we have to do this instead.
+        for (File ignoredFile : readIgnore(this.ignoreFile, this.basedir, getLog()).files) {
+            if (javascriptFiles.remove(ignoredFile)) {
+                getLog().warn("Excluding " + ignoredFile.getAbsolutePath());
+            }
+        }
 
-        		return Boolean.TRUE;
-        	}
-        });
-        return matches;
+        return javascriptFiles;
     }
 
     private static Map<String, Result> lintTheFiles(final JSHint jshint, final Cache cache, List<File> filesToCheck, final Config config, final Log log) throws FileNotFoundException {
@@ -399,12 +407,6 @@ public class Mojo extends AbstractMojo {
         return null;
     }
 
-	private static boolean nullSafeEquals(String a, String b) {
-		if(a==null && b==null) return true;
-		else if(a==null || b==null) return false;
-		else return a.equals(b);
-	}
-
 	private Cache readCache(File path, Cache.Hash hash){
 		try {
 			if(path.exists()){
@@ -423,16 +425,6 @@ public class Mojo extends AbstractMojo {
 		
 		return new Cache(hash);
 	}
-	
-	private void collect(File directory, List<File> files) {
-		for(File next : directory.listFiles()){
-			if(next.isDirectory()){
-				collect(next, files);
-			}else if(next.getName().endsWith(".js")){
-				files.add(next);
-			}
-		}
-	}
 
 	/**
 	 * Read contents of the specified config file and use the values defined there instead of the ones defined directly in pom.xml config.
@@ -442,7 +434,7 @@ public class Mojo extends AbstractMojo {
 	private static Config processConfigFile(File configFile) throws MojoExecutionException {
 		byte[] configFileContents;
 		try {
-			configFileContents = FileUtils.readFileToByteArray(configFile);
+			configFileContents = org.apache.commons.io.FileUtils.readFileToByteArray(configFile);
 		} catch (IOException e) {
 			throw new MojoExecutionException("Unable to read config file located in " + configFile);
 		}
@@ -473,9 +465,14 @@ public class Mojo extends AbstractMojo {
      *
      * @throws MojoExecutionException if the specified file cannot be processed
      */
-    private static Ignore processIgnoreFile(File ignoreFile) throws MojoExecutionException {
+    private static Ignore processIgnoreFile(File basedir, File ignoreFile) throws MojoExecutionException {
         try {
-            return new Ignore(FileUtils.readLines(ignoreFile, "UTF-8"));
+            List<String> lines = org.apache.commons.io.FileUtils.readLines(ignoreFile, "UTF-8");
+            List<File> files = new ArrayList<File>(lines.size());
+            for (String line : lines) {
+                files.add(new File(basedir, line));
+            }
+            return new Ignore(files);
         } catch (IOException e) {
             throw new MojoExecutionException("Unable to read ignore file located in " + ignoreFile, e);
         }

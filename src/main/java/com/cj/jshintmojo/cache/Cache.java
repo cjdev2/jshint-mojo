@@ -16,8 +16,9 @@ public class Cache implements Serializable {
 	    public final String configFile;
 	    public final List<String> directories;
 	    public final List<String> excludes;
+        public final List<String> includes;
         
-	    public Hash(String options, String globals, String jsHintVersion, String configFile, List<String> directories, List<String> excludes) {
+	    public Hash(String options, String globals, String jsHintVersion, String configFile, List<String> directories, List<String> excludes, List<String> includes) {
             super();
             this.options = options;
             this.globals = globals;
@@ -25,6 +26,7 @@ public class Cache implements Serializable {
             this.configFile = configFile;
             this.directories = directories;
             this.excludes = excludes;
+            this.includes = includes;
         }
 	}
 	
