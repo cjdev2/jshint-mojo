@@ -21,6 +21,7 @@ public class JSHint {
         rhino = new Rhino ();
         try {
             rhino.eval (
+            		"global=this;" + 
                     "print=function(){};" +
                             "quit=function(){};" +
                             "arguments=[];");
