@@ -6,7 +6,8 @@ import java.util.Map;
 
 public class EmbeddedJshintCode {
     public static final Map <String, String> EMBEDDED_VERSIONS =
-            Collections.unmodifiableMap (new HashMap <String, String> () {{
+            Collections.unmodifiableMap (new HashMap <String, String> () {{                
+                put ("2.9.4", "jshint-2.9.4.js");
                 put ("2.5.6", "jshint-rhino-2.5.6.js");
                 put ("2.4.3", "jshint-rhino-2.4.3.js");
                 put ("2.4.1", "jshint-rhino-2.4.1.js");
